@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RenderingPolicyDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate_act_id",
+    "decision",
+    "decision_id",
+    "validated_policy_epoch",
+    "validated_revocation_epoch",
+    "permitted_effects",
+    "denial_reasons"
+  ],
+  "properties": {
+    "candidate_act_id": {
+      "type": "string"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "ALLOW_RENDER",
+        "DENY_RENDER",
+        "ALLOW_RESTRICTED_MODE",
+        "REQUIRE_REVALIDATION"
+      ]
+    },
+    "decision_id": {
+      "type": "string"
+    },
+    "validated_policy_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "validated_revocation_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "permitted_effects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "RELEASE_CONTENT_KEY",
+          "DECRYPT",
+          "DECODE",
+          "CREATE_PROTECTED_SURFACE",
+          "COMPOSITE",
+          "DISPLAY",
+          "PLAY_AUDIO",
+          "CAST",
+          "MIRROR"
+        ]
+      }
+    },
+    "denial_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "RECIPIENT_NOT_ELIGIBLE",
+          "ELIGIBILITY_UNKNOWN",
+          "ELIGIBILITY_EXPIRED",
+          "PARENTAL_POLICY_DENY",
+          "PLATFORM_POLICY_DENY",
+          "CONTENT_CLASS_MISMATCH",
+          "POLICY_EPOCH_STALE",
+          "REVOCATION_EPOCH_STALE",
+          "NONCE_REPLAY",
+          "DEVICE_MISMATCH",
+          "APPLICATION_MISMATCH",
+          "SINK_MISMATCH",
+          "OUTPUT_TARGET_NOT_PERMITTED",
+          "ATTESTATION_FAILURE",
+          "AUTHORITY_EXPIRED"
+        ]
+      }
+    },
+    "validation_evidence_ref": {
+      "type": "string"
+    },
+    "decision_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

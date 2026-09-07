@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ietf:params:json-schema:child-rendering-candidate:00",
+  "title": "RestrictedContentCandidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "candidate_act_id",
+    "act_type",
+    "content",
+    "recipient_context",
+    "policy_context",
+    "render_request",
+    "freshness",
+    "finality_sink"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "candidate_act_id": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 128
+    },
+    "act_type": {
+      "type": "string",
+      "enum": [
+        "RENDER_VIDEO",
+        "RENDER_IMAGE",
+        "PLAY_AUDIO",
+        "RENDER_INTERACTIVE",
+        "RENDER_GENERATED_MEDIA",
+        "CAST_PROTECTED_CONTENT",
+        "MIRROR_PROTECTED_CONTENT"
+      ]
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content_id",
+        "content_digest",
+        "content_class",
+        "classification_source",
+        "protection_state"
+      ],
+      "properties": {
+        "content_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-fA-F]{64}$"
+        },
+        "content_class": {
+          "type": "string",
+          "enum": [
+            "ADULT_SEXUAL_CONTENT",
+            "SEXUALLY_EXPLICIT_CONTENT",
+            "AGE_RESTRICTED_VIDEO",
+            "AGE_RESTRICTED_AUDIO",
+            "AGE_RESTRICTED_INTERACTIVE",
+            "AGE_RESTRICTED_GENERATED_MEDIA",
+            "OTHER_RESTRICTED"
+          ]
+        },
+        "classification_source": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "classification_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "protection_state": {
+          "type": "string",
+          "enum": [
+            "ENCRYPTED",
+            "KEY_WITHHELD",
+            "PROTECTED_SURFACE_ONLY",
+            "NON_RENDERABLE_BUFFER",
+            "OTHER_PROTECTED"
+          ]
+        },
+        "origin_service": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "generation_model_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        }
+      }
+    },
+    "recipient_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recipient_context_id",
+        "eligibility_state",
+        "eligibility_evidence_ref"
+      ],
+      "properties": {
+        "recipient_context_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "eligibility_state": {
+          "type": "string",
+          "enum": [
+            "ELIGIBLE",
+            "NOT_ELIGIBLE",
+            "UNKNOWN",
+            "EXPIRED",
+            "REVOKED"
+          ]
+        },
+        "eligibility_evidence_ref": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "age_threshold_claim": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "OVER_18",
+            "OVER_LOCAL_THRESHOLD",
+            null
+          ]
+        },
+        "parental_policy_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        },
+        "privacy_preserving_proof": {
+          "type": "boolean"
+        }
+      }
+    },
+    "policy_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jurisdiction",
+        "policy_id",
+        "policy_epoch",
+        "revocation_epoch"
+      ],
+      "properties": {
+        "jurisdiction": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "policy_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "policy_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revocation_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parental_control_state": {
+          "type": "string",
+          "enum": [
+            "ALLOW",
+            "DENY",
+            "NOT_APPLICABLE",
+            "UNKNOWN"
+          ]
+        },
+        "platform_policy_state": {
+          "type": "string",
+          "enum": [
+            "ALLOW",
+            "DENY",
+            "REVIEW",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "render_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device_id",
+        "application_id",
+        "render_mode",
+        "output_targets"
+      ],
+      "properties": {
+        "device_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "application_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "component_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "render_mode": {
+          "type": "string",
+          "enum": [
+            "LOCAL_DISPLAY",
+            "LOCAL_AUDIO",
+            "XR_DISPLAY",
+            "CAST",
+            "MIRROR",
+            "REMOTE_DISPLAY"
+          ]
+        },
+        "output_targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "DISPLAY",
+              "SPEAKER",
+              "HEADSET",
+              "XR_COMPOSITOR",
+              "CAST_SINK",
+              "MIRROR_SINK"
+            ]
+          }
+        },
+        "requested_resolution": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64
+        },
+        "requested_audio": {
+          "type": "boolean"
+        },
+        "requested_decryption": {
+          "type": "boolean"
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nonce",
+        "created_at",
+        "expires_at"
+      ],
+      "properties": {
+        "nonce": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 256
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "session_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        }
+      }
+    },
+    "finality_sink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sink_id",
+        "sink_type"
+      ],
+      "properties": {
+        "sink_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "sink_type": {
+          "type": "string",
+          "enum": [
+            "CONTENT_KEY_RELEASE",
+            "DECRYPTION_GATE",
+            "MEDIA_DECODER_GATE",
+            "GPU_COMPOSITOR_GATE",
+            "PROTECTED_SURFACE_GATE",
+            "DISPLAY_ENABLE_GATE",
+            "AUDIO_OUTPUT_GATE",
+            "CAST_GATE",
+            "MIRROR_GATE"
+          ]
+        },
+        "attestation_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        }
+      }
+    }
+  }
+}

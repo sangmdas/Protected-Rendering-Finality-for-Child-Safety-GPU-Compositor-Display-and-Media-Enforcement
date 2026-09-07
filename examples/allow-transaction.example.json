@@ -1,0 +1,97 @@
+{
+  "candidate": {
+    "version": "1.0",
+    "candidate_act_id": "rca-8f3d0d0d-20260826-000001",
+    "act_type": "RENDER_VIDEO",
+    "content": {
+      "content_id": "asset-adult-99182",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "content_class": "ADULT_SEXUAL_CONTENT",
+      "classification_source": "platform-classifier-v7",
+      "classification_confidence": 0.998,
+      "protection_state": "KEY_WITHHELD",
+      "origin_service": "media.example",
+      "generation_model_id": null
+    },
+    "recipient_context": {
+      "recipient_context_id": "recipient-session-771",
+      "eligibility_state": "ELIGIBLE",
+      "eligibility_evidence_ref": "ageproof:opaque:44e2...",
+      "age_threshold_claim": "OVER_18",
+      "parental_policy_ref": null,
+      "privacy_preserving_proof": true
+    },
+    "policy_context": {
+      "jurisdiction": "EU",
+      "policy_id": "adult-content-policy-eu-v4",
+      "policy_epoch": 412,
+      "revocation_epoch": 39,
+      "parental_control_state": "NOT_APPLICABLE",
+      "platform_policy_state": "ALLOW"
+    },
+    "render_request": {
+      "device_id": "device-3dd18",
+      "application_id": "app.media.client",
+      "component_id": "protected-player",
+      "render_mode": "LOCAL_DISPLAY",
+      "output_targets": [
+        "DISPLAY",
+        "SPEAKER"
+      ],
+      "requested_resolution": "1080p",
+      "requested_audio": true,
+      "requested_decryption": true
+    },
+    "freshness": {
+      "nonce": "f9014acbe771440ab5208751",
+      "created_at": "2026-08-26T17:35:00Z",
+      "expires_at": "2026-08-26T17:35:30Z",
+      "session_id": "sess-fb211"
+    },
+    "finality_sink": {
+      "sink_id": "render-sink-secure-compositor-01",
+      "sink_type": "GPU_COMPOSITOR_GATE",
+      "attestation_ref": "attest:device-3dd18:epoch-88"
+    }
+  },
+  "authority": {
+    "authority_id": "rfa-d48d7f",
+    "candidate_act_id": "rca-8f3d0d0d-20260826-000001",
+    "candidate_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "validation_evidence_ref": "pve:9f1172",
+    "permitted_effects": [
+      "RELEASE_CONTENT_KEY",
+      "DECRYPT",
+      "DECODE",
+      "CREATE_PROTECTED_SURFACE",
+      "COMPOSITE",
+      "DISPLAY",
+      "PLAY_AUDIO"
+    ],
+    "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "recipient_context_id": "recipient-session-771",
+    "device_id": "device-3dd18",
+    "application_id": "app.media.client",
+    "sink_id": "render-sink-secure-compositor-01",
+    "sink_type": "GPU_COMPOSITOR_GATE",
+    "policy_epoch": 412,
+    "revocation_epoch": 39,
+    "nonce": "f9014acbe771440ab5208751",
+    "issued_at": "2026-08-26T17:35:01Z",
+    "expires_at": "2026-08-26T17:35:30Z",
+    "consumption": "FRAME_WINDOW",
+    "max_frame_count": 900,
+    "max_duration_ms": 30000,
+    "signature_or_mac": "base64url:protected-authenticator"
+  },
+  "sink_runtime_state": {
+    "sink_id": "render-sink-secure-compositor-01",
+    "current_policy_epoch": 412,
+    "current_revocation_epoch": 39,
+    "authority_consumed": false,
+    "device_attestation_state": "VALID",
+    "output_path": "DISPLAY",
+    "screen_capture_active": false,
+    "external_display_attached": false
+  }
+}

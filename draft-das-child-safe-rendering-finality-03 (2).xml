@@ -1,0 +1,1961 @@
+<?xml version='1.0' encoding='utf-8'?>
+<rfc docName="draft-das-child-safe-rendering-finality-03" category="info" ipr="trust200902" submissionType="IETF" version="3" tocInclude="true" tocDepth="3">
+  <front>
+    <title abbrev="Child-Safe Rendering Finality">Preventing Unauthorized Adult and Age-Restricted Content Rendering to Children Through Hardware-Rooted Execution Finality</title>
+    <seriesInfo name="Internet-Draft" value="draft-das-child-safe-rendering-finality-03"/>
+    <author fullname="Sangam Das" initials="S." surname="Das">
+      <organization>Independent Inventor</organization>
+      <address>
+        <postal>
+          <city>Balasore</city>
+          <region>Odisha</region>
+          <code>756001</code>
+          <country>India</country>
+        </postal>
+        <email>info@sangamdas.com</email>
+      </address>
+    </author>
+    <date year="2026" month="August" day="31"/>
+    <abstract>
+      <t>Online child-safety controls commonly operate before the final rendering boundary.  Platforms may use account-age flags, parental settings, content labels, recommender controls, server-side classification, age-assurance systems, access policies, or application filters to decide whether adult or age-restricted content should be available to a user.  Those controls are important, but an upstream decision does not by itself guarantee that the content cannot later be decrypted, decoded, composited, rendered, forwarded, mirrored, or otherwise materialized through another software or device path.</t>
+      <t>The practical motivation is also personal.  As a father of three, I have encountered this same problem in my own family: a parent may understand that an unrestricted adult-configured phone should not be handed to a minor, yet a son or daughter may repeatedly ask to use the parent's phone and, in ordinary family life, the parent may eventually hand it over.  Human affection, trust, convenience, and everyday family circumstances cannot simply be designed away.  Existing age checks, parental controls, child profiles, and application restrictions are useful, but they do not necessarily provide a simple device-wide protection for this moment of handover.  Requiring the adult to provide a fingerprint, facial verification, or other authentication for every individual video would also create an impractical user experience.  This document therefore considers a Temporary Under-18 Handover Mode: before giving an adult-configured device to a child, the adult can place the device into a temporary minor-protection state, after which Execution-Finality makes that state technically consequential at the protected rendering boundary.  This is therefore not only an abstract design problem for me; it is a solution developed to address a problem I encounter myself as a parent, with the broader aim of turning that everyday family difficulty into a practical protection that may also help other families.</t>
+      <t>This problem is becoming more important as content delivery becomes more distributed, encrypted, AI-mediated, personalized, and dynamically generated.  A modern device may receive content through applications, browsers, content-delivery networks, embedded web views, messaging clients, recommendation systems, generative-AI services, caches, cloud gaming or streaming pipelines, local AI models, or third-party SDKs.  The security question is therefore no longer only whether content was classified or whether an age check occurred upstream.  A later question must also be answered: is this specific protected content authorized to become perceptible to this recipient, on this device, under the current eligibility, policy, and revocation state, at this moment?</t>
+      <t>This document defines a protected rendering execution-finality architecture for adult, pornographic, sexually explicit, violent, gambling-related, or otherwise age-restricted content.  A proposed rendering is represented as a Restricted Content Candidate Act and remains in a Non-Renderable State until a Protected Enforcement Domain validates the applicable recipient, content, device, policy, age-or-eligibility, freshness, revocation, and sink predicates.  Protected validation evidence is committed before, or atomically with, release of scoped non-bearer Rendering Finality Authority.</t>
+      <t>A Protected Rendering Finality Sink independently verifies that authority immediately before the content becomes perceptible.  Depending on the implementation, the sink may control content-key release, decryption, media-decoder enablement, GPU or compositor access, protected-surface creation, audio output, casting, screen mirroring, display enablement, or an equivalent materialization boundary.  Content bytes may therefore be delivered to a device while remaining technically non-renderable.</t>
+      <t>The architecture deliberately does not define a universal age-estimation algorithm, identity system, or content-classification scheme.  Those mechanisms may supply inputs to the Protected Enforcement Domain.  This document defines the consequence-control step that prevents an upstream policy result from becoming merely advisory at the point of rendering.</t>
+      <t>UNICEF has warned that pornographic content can harm children and that digital restrictions have not kept pace with technological shifts.  The ITU Child Online Protection programme provides global guidance for safer digital environments, and the United Nations Committee on the Rights of the Child has called for protection of children from harmful content and online risks in the digital environment.  The European Commission has likewise adopted protection-of-minors guidance and a privacy-preserving age-verification approach for adult-restricted content.  These materials motivate the problem addressed here; they do not endorse this particular technical architecture.</t>
+      <t>The central protocol principle is: permission to deliver content is not permission to render it.</t>
+    </abstract>
+  </front>
+  <middle>
+    <section anchor="introduction">
+      <name>Introduction</name>
+      <t>Child-safety systems frequently make policy decisions far from the point at which content becomes visible or audible.  A server may classify content as adult-only.  An account system may determine that a user is under an applicable age threshold.  A parental-control service may deny a content category.  A platform may enforce a regional policy.  Yet the media pipeline may contain many later components: encrypted transport, local cache, decoder, GPU, compositor, protected surface, display controller, speaker path, casting interface, or screen-mirroring function.</t>
+      <t>The execution-finality model treats the final materialization of restricted content as a separate consequence.  The relevant security property is not merely that a policy engine produced DENY.  The property is that the protected content cannot become perceptible unless the final rendering boundary verifies current, act-specific authority.</t>
+      <t>The narrow scope of this document is adult and age-restricted content rendering.  It does not attempt to standardize child identity, parental consent, age estimation, content moderation, recommender algorithms, or the legal definition of harmful content across jurisdictions.</t>
+    </section>
+    <section anchor="why-this-is-required-now">
+      <name>Why This Is Required Now</name>
+      <t>The technical need has intensified because content is no longer delivered through a single predictable application path.  Streaming platforms, browsers, encrypted media pipelines, social applications, short-video feeds, generative AI, multimodal assistants, local models, cloud rendering, game engines, mixed-reality systems, and third-party SDKs can all participate in content selection and materialization.</t>
+      <t>AI also changes the scale and dynamism of the problem.  A system can generate or transform sexually explicit or otherwise adult material on demand, select content based on inferred interests, synthesize new variants that were never pre-classified as static files, or route a user through multiple content sources.  An upstream catalogue label alone is therefore less reliable as the sole technical enforcement point.</t>
+      <t>This document does not assert that child-safety controls were unnecessary in earlier Internet systems.  The narrower claim is that modern content stacks create more paths between upstream policy and final perception, increasing the value of an independently verified rendering boundary.</t>
+    </section>
+    <section anchor="international-child-safety-motivation">
+      <name>International Child-Safety Motivation</name>
+      <t>UNICEF states that pornographic content can harm children and has expressed concern about the large quantity of pornography that is easily accessible online.  UNICEF has also stated that efforts to restrict children's access in digital environments have not kept pace with technological shifts.</t>
+      <t>The ITU Child Online Protection initiative provides policy-maker, educator, industry, parent, and child-focused guidance intended to support safer digital environments for children.  Its current child online protection work emphasizes child-centred and rights-based protection mechanisms.</t>
+      <t>The United Nations Committee on the Rights of the Child, in General Comment No. 25 (2021), treats the digital environment as encompassing networks, content, services, applications, connected devices, artificial intelligence, robotics, automated systems, algorithms, and data analytics.  The Committee has repeatedly recommended protecting children from harmful content and online risks while respecting their rights and privacy.</t>
+      <t>The European Commission's protection-of-minors guidance under the Digital Services Act addresses harmful content and recommends effective age-assurance measures for adult content such as pornography.  The Commission's age-verification approach is designed to let a user prove that an applicable age threshold is met without unnecessarily revealing identity or exact age.</t>
+      <t>These sources provide policy and risk context only.  They do not define, require, or endorse the execution-finality mechanism specified in this document.</t>
+    </section>
+    <section anchor="core-security-distinction">
+      <name>Core Security Distinction</name>
+      <t>The central distinction is:</t>
+      <figure>
+        <artwork type="text">
+CONTENT DELIVERY
+        !=
+CONTENT RENDERING AUTHORITY
+
+AGE CHECK
+        !=
+DISPLAY FINALITY
+
+CONTENT CLASSIFICATION
+        !=
+DECRYPTION AUTHORITY
+
+SERVER-SIDE ALLOW
+        !=
+DEVICE-SIDE MATERIALIZATION AUTHORITY
+</artwork>
+      </figure>
+    </section>
+    <section anchor="threat-and-failure-model">
+      <name>Threat and Failure Model</name>
+      <t>A restricted-content system may fail even when an upstream classification or eligibility decision was correct.  Examples include stale age state, revoked parental policy, a minor using an adult-authorized shared device, physical device handoff after adult authentication, failure to place an adult-owned phone into a protected temporary minor state before handoff, stale adult viewing authority surviving a family-device handover, cache replay, alternate application paths, direct decoder access, a compromised application, a malicious embedded SDK, casting or mirroring, a stale decryption key, sink substitution, modified content metadata, or a generated-content path that bypasses the original classifier.</t>
+      <t>A conforming deployment therefore assumes that ordinary application-layer software may be buggy, compromised, overly permissive, or unable to enforce the last consequence boundary by itself.</t>
+    </section>
+    <section anchor="dual-boundary-architecture">
+      <name>Dual-Boundary Architecture</name>
+      <t>A deployment MAY use two execution-finality boundaries.</t>
+      <t>The first boundary governs DELIVERY: whether protected content may be transported to or retained within a device or protected environment.</t>
+      <t>The second boundary governs RENDERING: whether that content may become visible, audible, cast, mirrored, decrypted into a usable representation, or otherwise perceptible.</t>
+      <t>The second boundary is the critical boundary defined by this draft.  Content received after successful delivery remains non-renderable until a current Rendering Finality Authority is independently verified.</t>
+      <figure>
+        <artwork type="text">
+Restricted Content
+        |
+        v
+Encrypted / Protected Candidate Payload
+        |
+        v
+Delivery Policy / Delivery PED
+        |
+        v
+Delivery Finality Authority
+        |
+        v
+Device Receives Protected Payload
+        |
+        v
+STILL NON-RENDERABLE
+        |
+        v
+Device-Side Protected Enforcement Domain
+        |
+        +-- recipient / eligibility state
+        +-- content class
+        +-- parental / regulatory policy
+        +-- device and session state
+        +-- policy / revocation epoch
+        +-- nonce / freshness
+        +-- intended rendering sink
+        |
+        v
+Protected Validation Evidence
+        |
+        v
+Scoped Non-Bearer Rendering Finality Authority
+        |
+        v
+PROTECTED RENDERING FINALITY SINK
+        |
+        +-- PASS -&gt; permitted rendering
+        |
+        `-- FAIL -&gt; remain non-renderable
+</artwork>
+      </figure>
+    </section>
+    <section anchor="restricted-content-candidate-act">
+      <name>Restricted Content Candidate Act</name>
+      <t>A Restricted Content Candidate Act represents a proposed materialization of age-restricted content.  It may describe a video frame sequence, image, audio stream, interactive scene, generated media object, XR scene, game asset, webpage media object, or another protected representation.</t>
+      <t>The Candidate Act MUST remain non-renderable while required execution-finality validation is incomplete.</t>
+    </section>
+    <section anchor="json-interoperability-profile">
+      <name>JSON Interoperability Profile</name>
+      <t>This revision defines a JSON-based interoperability profile so that implementations can evaluate a concrete contract rather than only an abstract policy model.  JSON objects MUST be encoded as UTF-8.  Implementations MUST reject unknown load-bearing fields when the active schema declares additionalProperties=false.</t>
+      <t>The JSON profile does not require HTTP as the transport.  The objects may be carried over a local protected IPC mechanism, an operating-system service boundary, a trusted application-to-enclave channel, a platform API, or another authenticated transport.  A future revision may define a media type or explicit transport binding.</t>
+    </section>
+    <section anchor="restrictedcontentcandidate-json-schema">
+      <name>RestrictedContentCandidate JSON Schema</name>
+      <figure>
+        <artwork type="json">
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ietf:params:json-schema:child-rendering-candidate:00",
+  "title": "RestrictedContentCandidate",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "candidate_act_id",
+    "act_type",
+    "content",
+    "recipient_context",
+    "policy_context",
+    "render_request",
+    "freshness",
+    "finality_sink"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "candidate_act_id": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 128
+    },
+    "act_type": {
+      "type": "string",
+      "enum": [
+        "RENDER_VIDEO",
+        "RENDER_IMAGE",
+        "PLAY_AUDIO",
+        "RENDER_INTERACTIVE",
+        "RENDER_GENERATED_MEDIA",
+        "CAST_PROTECTED_CONTENT",
+        "MIRROR_PROTECTED_CONTENT"
+      ]
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "content_id",
+        "content_digest",
+        "content_class",
+        "classification_source",
+        "protection_state"
+      ],
+      "properties": {
+        "content_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-fA-F]{64}$"
+        },
+        "content_class": {
+          "type": "string",
+          "enum": [
+            "ADULT_SEXUAL_CONTENT",
+            "SEXUALLY_EXPLICIT_CONTENT",
+            "AGE_RESTRICTED_VIDEO",
+            "AGE_RESTRICTED_AUDIO",
+            "AGE_RESTRICTED_INTERACTIVE",
+            "AGE_RESTRICTED_GENERATED_MEDIA",
+            "OTHER_RESTRICTED"
+          ]
+        },
+        "classification_source": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "classification_confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "protection_state": {
+          "type": "string",
+          "enum": [
+            "ENCRYPTED",
+            "KEY_WITHHELD",
+            "PROTECTED_SURFACE_ONLY",
+            "NON_RENDERABLE_BUFFER",
+            "OTHER_PROTECTED"
+          ]
+        },
+        "origin_service": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "generation_model_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        }
+      }
+    },
+    "recipient_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "recipient_context_id",
+        "eligibility_state",
+        "eligibility_evidence_ref"
+      ],
+      "properties": {
+        "recipient_context_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "eligibility_state": {
+          "type": "string",
+          "enum": [
+            "ELIGIBLE",
+            "NOT_ELIGIBLE",
+            "UNKNOWN",
+            "EXPIRED",
+            "REVOKED"
+          ]
+        },
+        "eligibility_evidence_ref": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "age_threshold_claim": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "OVER_18",
+            "OVER_LOCAL_THRESHOLD",
+            null
+          ]
+        },
+        "parental_policy_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        },
+        "privacy_preserving_proof": {
+          "type": "boolean"
+        }
+      }
+    },
+    "policy_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "jurisdiction",
+        "policy_id",
+        "policy_epoch",
+        "revocation_epoch"
+      ],
+      "properties": {
+        "jurisdiction": {
+          "type": "string",
+          "maxLength": 64
+        },
+        "policy_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "policy_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "revocation_epoch": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "parental_control_state": {
+          "type": "string",
+          "enum": [
+            "ALLOW",
+            "DENY",
+            "NOT_APPLICABLE",
+            "UNKNOWN"
+          ]
+        },
+        "platform_policy_state": {
+          "type": "string",
+          "enum": [
+            "ALLOW",
+            "DENY",
+            "REVIEW",
+            "UNKNOWN"
+          ]
+        }
+      }
+    },
+    "render_request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "device_id",
+        "application_id",
+        "render_mode",
+        "output_targets"
+      ],
+      "properties": {
+        "device_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "application_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "component_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        },
+        "render_mode": {
+          "type": "string",
+          "enum": [
+            "LOCAL_DISPLAY",
+            "LOCAL_AUDIO",
+            "XR_DISPLAY",
+            "CAST",
+            "MIRROR",
+            "REMOTE_DISPLAY"
+          ]
+        },
+        "output_targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "DISPLAY",
+              "SPEAKER",
+              "HEADSET",
+              "XR_COMPOSITOR",
+              "CAST_SINK",
+              "MIRROR_SINK"
+            ]
+          }
+        },
+        "requested_resolution": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 64
+        },
+        "requested_audio": {
+          "type": "boolean"
+        },
+        "requested_decryption": {
+          "type": "boolean"
+        }
+      }
+    },
+    "freshness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nonce",
+        "created_at",
+        "expires_at"
+      ],
+      "properties": {
+        "nonce": {
+          "type": "string",
+          "minLength": 16,
+          "maxLength": 256
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "session_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 256
+        }
+      }
+    },
+    "finality_sink": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sink_id",
+        "sink_type"
+      ],
+      "properties": {
+        "sink_id": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "sink_type": {
+          "type": "string",
+          "enum": [
+            "CONTENT_KEY_RELEASE",
+            "DECRYPTION_GATE",
+            "MEDIA_DECODER_GATE",
+            "GPU_COMPOSITOR_GATE",
+            "PROTECTED_SURFACE_GATE",
+            "DISPLAY_ENABLE_GATE",
+            "AUDIO_OUTPUT_GATE",
+            "CAST_GATE",
+            "MIRROR_GATE"
+          ]
+        },
+        "attestation_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "maxLength": 512
+        }
+      }
+    }
+  }
+}
+</artwork>
+      </figure>
+    </section>
+    <section anchor="renderingpolicydecision-json-schema">
+      <name>RenderingPolicyDecision JSON Schema</name>
+      <figure>
+        <artwork type="json">
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RenderingPolicyDecision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate_act_id",
+    "decision",
+    "decision_id",
+    "validated_policy_epoch",
+    "validated_revocation_epoch",
+    "permitted_effects",
+    "denial_reasons"
+  ],
+  "properties": {
+    "candidate_act_id": {
+      "type": "string"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "ALLOW_RENDER",
+        "DENY_RENDER",
+        "ALLOW_RESTRICTED_MODE",
+        "REQUIRE_REVALIDATION"
+      ]
+    },
+    "decision_id": {
+      "type": "string"
+    },
+    "validated_policy_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "validated_revocation_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "permitted_effects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "RELEASE_CONTENT_KEY",
+          "DECRYPT",
+          "DECODE",
+          "CREATE_PROTECTED_SURFACE",
+          "COMPOSITE",
+          "DISPLAY",
+          "PLAY_AUDIO",
+          "CAST",
+          "MIRROR"
+        ]
+      }
+    },
+    "denial_reasons": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "RECIPIENT_NOT_ELIGIBLE",
+          "ELIGIBILITY_UNKNOWN",
+          "ELIGIBILITY_EXPIRED",
+          "PARENTAL_POLICY_DENY",
+          "PLATFORM_POLICY_DENY",
+          "CONTENT_CLASS_MISMATCH",
+          "POLICY_EPOCH_STALE",
+          "REVOCATION_EPOCH_STALE",
+          "NONCE_REPLAY",
+          "DEVICE_MISMATCH",
+          "APPLICATION_MISMATCH",
+          "SINK_MISMATCH",
+          "OUTPUT_TARGET_NOT_PERMITTED",
+          "ATTESTATION_FAILURE",
+          "AUTHORITY_EXPIRED"
+        ]
+      }
+    },
+    "validation_evidence_ref": {
+      "type": "string"
+    },
+    "decision_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
+</artwork>
+      </figure>
+    </section>
+    <section anchor="renderingfinalityauthority-json-schema">
+      <name>RenderingFinalityAuthority JSON Schema</name>
+      <figure>
+        <artwork type="json">
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RenderingFinalityAuthority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority_id",
+    "candidate_act_id",
+    "candidate_digest",
+    "validation_evidence_ref",
+    "permitted_effects",
+    "sink_id",
+    "policy_epoch",
+    "revocation_epoch",
+    "nonce",
+    "issued_at",
+    "expires_at",
+    "consumption"
+  ],
+  "properties": {
+    "authority_id": {
+      "type": "string"
+    },
+    "candidate_act_id": {
+      "type": "string"
+    },
+    "candidate_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-fA-F]{64}$"
+    },
+    "validation_evidence_ref": {
+      "type": "string"
+    },
+    "permitted_effects": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "content_digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-fA-F]{64}$"
+    },
+    "recipient_context_id": {
+      "type": "string"
+    },
+    "device_id": {
+      "type": "string"
+    },
+    "application_id": {
+      "type": "string"
+    },
+    "sink_id": {
+      "type": "string"
+    },
+    "sink_type": {
+      "type": "string"
+    },
+    "policy_epoch": {
+      "type": "integer"
+    },
+    "revocation_epoch": {
+      "type": "integer"
+    },
+    "nonce": {
+      "type": "string"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "consumption": {
+      "type": "string",
+      "enum": [
+        "SINGLE_USE",
+        "FRAME_WINDOW",
+        "SESSION_BOUND"
+      ]
+    },
+    "max_frame_count": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "max_duration_ms": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1
+    },
+    "signature_or_mac": {
+      "type": "string"
+    }
+  }
+}
+</artwork>
+      </figure>
+    </section>
+    <section anchor="rendersinkverify-request-json-schema">
+      <name>RenderSinkVerify Request JSON Schema</name>
+      <figure>
+        <artwork type="json">
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RenderSinkVerifyRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate",
+    "authority",
+    "sink_runtime_state"
+  ],
+  "properties": {
+    "candidate": {
+      "$ref": "urn:ietf:params:json-schema:child-rendering-candidate:00"
+    },
+    "authority": {
+      "type": "object"
+    },
+    "sink_runtime_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sink_id",
+        "current_policy_epoch",
+        "current_revocation_epoch",
+        "authority_consumed",
+        "device_attestation_state",
+        "output_path"
+      ],
+      "properties": {
+        "sink_id": {
+          "type": "string"
+        },
+        "current_policy_epoch": {
+          "type": "integer"
+        },
+        "current_revocation_epoch": {
+          "type": "integer"
+        },
+        "authority_consumed": {
+          "type": "boolean"
+        },
+        "device_attestation_state": {
+          "type": "string",
+          "enum": [
+            "VALID",
+            "INVALID",
+            "UNKNOWN"
+          ]
+        },
+        "output_path": {
+          "type": "string",
+          "enum": [
+            "DISPLAY",
+            "AUDIO",
+            "XR",
+            "CAST",
+            "MIRROR"
+          ]
+        },
+        "screen_capture_active": {
+          "type": "boolean"
+        },
+        "external_display_attached": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
+</artwork>
+      </figure>
+    </section>
+    <section anchor="protected-enforcement-domain-validation">
+      <name>Protected Enforcement Domain Validation</name>
+      <t>The Protected Enforcement Domain (PED) MUST evaluate all predicates required by the applicable deployment before releasing Rendering Finality Authority.  Typical predicates include recipient eligibility, age-threshold evidence, parental policy, content classification, content digest, jurisdiction, platform policy, device identity, application identity, requested output mode, output target, current policy epoch, current revocation epoch, nonce freshness, device attestation, and intended Finality Sink identity.</t>
+      <t>A successful upstream age check MUST NOT itself cause decryption or display.  PED validation success authorizes creation of scoped finality authority; it does not complete the rendering consequence.</t>
+    </section>
+    <section anchor="protected-validation-evidence">
+      <name>Protected Validation Evidence</name>
+      <t>Before, or atomically with, Rendering Finality Authority issuance, the PED MUST commit protected validation evidence.  The evidence MAY be represented by a protected signed record, MAC, enclave or HSM assertion, sealed state, monotonic-state commitment, append-only protected record, or equivalent protected mechanism.</t>
+      <t>A Boolean ALLOW value by itself is not sufficient finality authority.</t>
+    </section>
+    <section anchor="rendering-finality-authority">
+      <name>Rendering Finality Authority</name>
+      <t>Rendering Finality Authority MUST be act-bound, content-bound, recipient-bound, device-bound, application-bound where applicable, policy-epoch-bound, revocation-epoch-bound, nonce/freshness-bound, effect-bound, and sink-bound.</t>
+      <t>Possession alone MUST NOT be sufficient.  The authority is non-bearer because the Finality Sink independently verifies the protected bindings before enabling the permitted materialization effects.</t>
+      <t>An authority for DISPLAY MUST NOT automatically authorize CAST or MIRROR.  An authority for one device MUST NOT automatically authorize another device.  An authority for one content digest MUST NOT authorize modified or substituted content.</t>
+    </section>
+    <section anchor="where-enforcement-occurs">
+      <name>Where Enforcement Occurs</name>
+      <t>The most important deployment question is where the final technical gate is placed.  The gate SHOULD control the first boundary at which the protected content becomes perceptible or can be trivially converted into a perceptible representation.</t>
+      <t>Possible Protected Rendering Finality Sinks include content-key release, decryption, media-decoder enablement, GPU command submission, protected-surface creation, compositor admission, display-plane enablement, audio-output enablement, XR compositor access, secure-video path enablement, casting, or screen mirroring.</t>
+      <t>A server-side policy endpoint alone is not a Protected Rendering Finality Sink unless bypassing it also makes the protected rendering technically impossible.</t>
+    </section>
+    <section anchor="content-key-and-decryption-enforcement">
+      <name>Content-Key and Decryption Enforcement</name>
+      <t>Where encrypted or otherwise protected media is used, withholding the usable content key is a strong enforcement point.  The key-release component MAY act as the Finality Sink or as one element of a chained finality path.</t>
+      <t>If validation fails, the usable key MUST NOT be released into an unprotected application context.  If a key was previously released under a bounded authority, its validity SHOULD be constrained by session, content, policy epoch, time, frame window, or equivalent protected state.</t>
+    </section>
+    <section anchor="decoder-gpu-and-compositor-enforcement">
+      <name>Decoder, GPU and Compositor Enforcement</name>
+      <t>For media that is already locally encrypted or decoded inside a protected pipeline, the Finality Sink MAY be placed at a decoder, GPU, protected-surface, or compositor boundary.  The implementation MUST prevent ordinary application code from converting a denied Candidate Act into a visible frame through an alternate unprotected surface.</t>
+      <t>Protected rendering MAY therefore require that decoded frames remain in protected memory or protected surfaces until the compositor verifies current finality authority.</t>
+    </section>
+    <section anchor="audio-casting-mirroring-and-secondary-outputs">
+      <name>Audio, Casting, Mirroring and Secondary Outputs</name>
+      <t>Adult or age-restricted content can be materialized through secondary paths even when a local display is controlled.  Audio, HDMI or external displays, wireless casting, screen mirroring, remote-display APIs, accessibility capture paths, and similar outputs MAY therefore require separate consequence classes or sink-bound authority.</t>
+      <t>A local-display authority MUST NOT be interpreted as universal authority for every secondary output.</t>
+    </section>
+    <section anchor="complete-allow-transaction-example">
+      <name>Complete Allow Transaction Example</name>
+      <t>The following example shows an adult-classified video that remains key-withheld until the device-side protected sink verifies current eligibility, policy, device, content, freshness, and output-path state.</t>
+      <figure>
+        <artwork type="json">
+{
+  "candidate": {
+    "version": "1.0",
+    "candidate_act_id": "rca-8f3d0d0d-20260826-000001",
+    "act_type": "RENDER_VIDEO",
+    "content": {
+      "content_id": "asset-adult-99182",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "content_class": "ADULT_SEXUAL_CONTENT",
+      "classification_source": "platform-classifier-v7",
+      "classification_confidence": 0.998,
+      "protection_state": "KEY_WITHHELD",
+      "origin_service": "media.example",
+      "generation_model_id": null
+    },
+    "recipient_context": {
+      "recipient_context_id": "recipient-session-771",
+      "eligibility_state": "ELIGIBLE",
+      "eligibility_evidence_ref": "ageproof:opaque:44e2...",
+      "age_threshold_claim": "OVER_18",
+      "parental_policy_ref": null,
+      "privacy_preserving_proof": true
+    },
+    "policy_context": {
+      "jurisdiction": "EU",
+      "policy_id": "adult-content-policy-eu-v4",
+      "policy_epoch": 412,
+      "revocation_epoch": 39,
+      "parental_control_state": "NOT_APPLICABLE",
+      "platform_policy_state": "ALLOW"
+    },
+    "render_request": {
+      "device_id": "device-3dd18",
+      "application_id": "app.media.client",
+      "component_id": "protected-player",
+      "render_mode": "LOCAL_DISPLAY",
+      "output_targets": [
+        "DISPLAY",
+        "SPEAKER"
+      ],
+      "requested_resolution": "1080p",
+      "requested_audio": true,
+      "requested_decryption": true
+    },
+    "freshness": {
+      "nonce": "f9014acbe771440ab5208751",
+      "created_at": "2026-08-26T17:35:00Z",
+      "expires_at": "2026-08-26T17:35:30Z",
+      "session_id": "sess-fb211"
+    },
+    "finality_sink": {
+      "sink_id": "render-sink-secure-compositor-01",
+      "sink_type": "GPU_COMPOSITOR_GATE",
+      "attestation_ref": "attest:device-3dd18:epoch-88"
+    }
+  },
+  "authority": {
+    "authority_id": "rfa-d48d7f",
+    "candidate_act_id": "rca-8f3d0d0d-20260826-000001",
+    "candidate_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "validation_evidence_ref": "pve:9f1172",
+    "permitted_effects": [
+      "RELEASE_CONTENT_KEY",
+      "DECRYPT",
+      "DECODE",
+      "CREATE_PROTECTED_SURFACE",
+      "COMPOSITE",
+      "DISPLAY",
+      "PLAY_AUDIO"
+    ],
+    "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "recipient_context_id": "recipient-session-771",
+    "device_id": "device-3dd18",
+    "application_id": "app.media.client",
+    "sink_id": "render-sink-secure-compositor-01",
+    "sink_type": "GPU_COMPOSITOR_GATE",
+    "policy_epoch": 412,
+    "revocation_epoch": 39,
+    "nonce": "f9014acbe771440ab5208751",
+    "issued_at": "2026-08-26T17:35:01Z",
+    "expires_at": "2026-08-26T17:35:30Z",
+    "consumption": "FRAME_WINDOW",
+    "max_frame_count": 900,
+    "max_duration_ms": 30000,
+    "signature_or_mac": "base64url:protected-authenticator"
+  },
+  "sink_runtime_state": {
+    "sink_id": "render-sink-secure-compositor-01",
+    "current_policy_epoch": 412,
+    "current_revocation_epoch": 39,
+    "authority_consumed": false,
+    "device_attestation_state": "VALID",
+    "output_path": "DISPLAY",
+    "screen_capture_active": false,
+    "external_display_attached": false
+  }
+}
+</artwork>
+      </figure>
+    </section>
+    <section anchor="complete-denial-transaction-example">
+      <name>Complete Denial Transaction Example</name>
+      <t>The following example shows a denial where the recipient is not eligible and parental policy also denies rendering.  The important result is not merely an error response: all materialization controls remain disabled.</t>
+      <figure>
+        <artwork type="json">
+{
+  "candidate_act_id": "rca-minor-session-223",
+  "decision": "DENY_RENDER",
+  "decision_id": "decision-99831",
+  "validated_policy_epoch": 412,
+  "validated_revocation_epoch": 39,
+  "permitted_effects": [],
+  "denial_reasons": [
+    "RECIPIENT_NOT_ELIGIBLE",
+    "PARENTAL_POLICY_DENY"
+  ],
+  "validation_evidence_ref": "pve-deny:3882",
+  "decision_expires_at": "2026-08-26T17:36:00Z",
+  "sink_action": {
+    "release_content_key": false,
+    "decrypt": false,
+    "decode": false,
+    "create_protected_surface": false,
+    "display": false,
+    "play_audio": false,
+    "cast": false,
+    "mirror": false,
+    "result": "CONTENT_REMAINS_NON_RENDERABLE"
+  }
+}
+</artwork>
+      </figure>
+    </section>
+    <section anchor="fail-closed-requirements">
+      <name>Fail-Closed Requirements</name>
+      <t>If required authority is missing, malformed, expired, stale, replayed, revoked, consumed, content-mismatched, recipient-mismatched, device-mismatched, application-mismatched, policy-mismatched, output-mismatched, or sink-mismatched, the content MUST remain non-renderable.</t>
+      <t>Failure MUST NOT be converted into a warning followed by display.  Implementations MUST NOT use 'best effort' rendering for content subject to this protected finality profile when current authority cannot be established.</t>
+    </section>
+    <section anchor="replay-revocation-and-state-changes">
+      <name>Replay, Revocation and State Changes</name>
+      <t>Eligibility and parental state may change after content is delivered.  A device may also restore an old application snapshot or replay a previously valid rendering authority.  The Finality Sink SHOULD therefore verify current policy and revocation epochs immediately before materialization and MUST enforce nonce or equivalent anti-replay state.</t>
+      <t>An old authorization MUST NOT automatically override a later parental-control change, account-state change, legal-policy change, device revocation, or recipient eligibility change.</t>
+    </section>
+    <section anchor="generated-and-ai-transformed-content">
+      <name>Generated and AI-Transformed Content</name>
+      <t>Generative AI may create age-restricted media that has no stable catalogue identifier.  The Candidate Act therefore supports content digests, generation-model identifiers, classification sources, and protected output state.  A generated object SHOULD be bound to the classification and authority actually used for the attempted rendering.</t>
+      <t>This draft does not define how AI-generated content is classified.  It defines how a classification or policy decision can be made technically load-bearing at the rendering boundary.</t>
+    </section>
+    <section anchor="privacy-considerations">
+      <name>Privacy Considerations</name>
+      <t>Child-safety enforcement can itself create privacy risk if systems unnecessarily expose a child's identity, exact age, browsing history, or content choices.  Implementations SHOULD minimize disclosure and MAY consume privacy-preserving eligibility proofs that state only whether the required threshold or policy condition is satisfied.</t>
+      <t>The rendering sink generally needs the validated eligibility result and bindings necessary for effectuation; it does not necessarily need the user's civil identity or exact date of birth.</t>
+      <t>Logs and validation evidence SHOULD avoid recording unnecessary content titles, URLs, identity attributes, or detailed viewing history where a digest, opaque identifier, or protected commitment is sufficient.</t>
+    </section>
+    <section anchor="security-considerations">
+      <name>Security Considerations</name>
+      <t>Threats include compromised applications, forged age state, stale parental policy, replayed authorities, content substitution after classification, sink substitution, screen-capture bypass, casting bypass, unprotected decoder paths, key extraction, rollback of revocation state, and malicious SDKs.</t>
+      <t>Implementations SHOULD place load-bearing checks within protected execution, trusted operating-system, hardware-backed, or equivalently isolated enforcement paths when the threat model includes compromise of ordinary application software.</t>
+    </section>
+    <section anchor="interoperability-with-existing-age-assurance-and-platform-systems">
+      <name>Interoperability with Existing Age-Assurance and Platform Systems</name>
+      <t>The execution-finality layer is designed to consume outcomes from existing systems rather than replace them.  Inputs MAY come from privacy-preserving age verification, platform account state, parental-control systems, content classifiers, regulatory policy, trusted identity providers, device policy, or enterprise/family safety services.</t>
+      <t>Those systems answer whether a condition is satisfied.  The Finality Sink answers whether the specific protected rendering consequence may now occur.</t>
+    </section>
+    <section anchor="case-study-minor-using-adult-phone">
+      <name>Case Study: Minor-Registered Device and Minor Using an Adult's Phone</name>
+      <t>This case study addresses a common shared-device and device-handoff problem: an adult legitimately satisfies an age threshold on a smartphone or other device, but an underage child later uses the same device.  The security objective is to prevent the adult's age status, account state, device ownership, or earlier successful authentication from becoming indefinite rendering authority for a different current user.</t>
+      <t>The case is important because a device can truthfully be associated with an adult while the person currently holding or viewing the device is a minor.  A design that marks the device, account, or application permanently as "adult" after one successful age check would therefore create a transferable authorization state.  This document does not permit that interpretation.</t>
+
+      <section anchor="case-study-human-centered-handover">
+        <name>Human-Centered Family Handover: Designing for What Parents Actually Do</name>
+        <t>A purely logical security rule might say that an adult should never hand an unrestricted adult-configured phone to a minor.  That rule is simple in theory, but family life is not always governed by ideal security procedure.  Children ask to use a parent's phone for games, school work, photographs, messages, maps, entertainment, travel, or simple curiosity.  A parent may initially refuse and later agree after repeated requests.  The architecture in this document treats that behavior as a realistic human condition to be designed for, rather than as a reason to blame the parent or declare the technical problem out of scope.</t>
+        <t>The objective is therefore not to demand perfect parental behavior.  The objective is to give the adult a simple, understandable and technically meaningful action immediately before a device handover, so that ordinary family emotion does not silently turn an adult-authorized device into an unrestricted adult-content device in the hands of a child.</t>
+        <t>The design follows a usability principle: <strong>make the transition into the safer child state easy, and make the transition back into adult rendering authority require protected adult authorization.</strong></t>
+
+        <section anchor="case-study-adult-shared-use-declaration">
+          <name>Adult-Owned Device With Possible Minor Co-Use</name>
+          <t>During device setup, family-safety configuration, or later security settings, an adult MAY declare that the device is primarily an adult-owned device but may sometimes be used by a minor son, daughter, or other child.  This declaration does not convert the device permanently into a Minor-Registered Device.  Instead, it informs the protected device policy that family handover is an expected operating condition and that adult-content authority must not be treated as an indefinite property of device ownership.</t>
+          <t>A device in this shared-use configuration MAY support a bounded Adult Viewing Context for the adult's own use.  The adult can establish that context through a protected local verification mechanism, after which multiple restricted-content items MAY be rendered within the same valid, scoped session or epoch without requiring a fingerprint, face scan, passkey, or PIN for every individual video, image, page, or frame.</t>
+          <t>This is important for practical deployment.  Requiring a new biometric or fingerprint operation for every restricted-content object would create excessive friction and could make ordinary adult use unacceptable.  The security boundary SHOULD therefore authenticate meaningful state transitions rather than every frame or every video.  A sufficiently recent adult verification can authorize a bounded protected adult session, subject to expiry, revocation, sink binding, policy changes, or other revalidation conditions.</t>
+          <t>The shared-use declaration therefore means: <strong>this phone belongs to an adult, but the system knows that a minor may sometimes receive physical possession of it.</strong>  That fact changes how handover state is managed; it does not require continuous surveillance of who is holding the device.</t>
+        </section>
+
+        <section anchor="case-study-temporary-under-18-mode">
+          <name>Temporary Under-18 Handover Mode</name>
+          <t>Before an adult hands the device to a minor, the adult MAY activate a protected <strong>Temporary Under-18 Mode</strong> from device settings, family controls, a protected quick-setting surface, or another implementation-defined user interface.  The mode is intended to be simple enough to use at the moment of handover.</t>
+          <t>Once Temporary Under-18 Mode becomes active, the protected rendering architecture MUST treat the device, for the protected restricted-content classes governed by this profile, as though the applicable child-safety baseline were active.  Adult-only Rendering Finality Authority MUST NOT be newly issued while that mode is active.</t>
+          <t>Activation of Temporary Under-18 Mode SHOULD invalidate, suspend, consume, or cryptographically supersede any prior Adult Viewing Context or Rendering Finality Authority that would otherwise permit adult-only rendering.  A protected policy or security epoch SHOULD advance, or equivalent protected state SHOULD change, so that stale adult authority cannot simply survive the handover.</t>
+          <t>While Temporary Under-18 Mode is active, an existing adult account login, stored OVER_18 credential, browser cookie, application token, cached adult session, downloaded media object, previously released application state, or earlier adult verification MUST NOT by itself restore adult rendering authority.  The Protected Rendering Finality Sink continues to require authority consistent with the current temporary minor state.</t>
+          <t>The adult MAY select a bounded duration, such as a short family-use interval, or MAY select an explicit-until-disabled mode.  However, expiration of a timer SHOULD NOT silently restore active adult Rendering Finality Authority while the device may still be in the child's possession.  A safer implementation can transition at timer expiry to an unverified adult state in which adult-only rendering remains non-renderable until the adult performs protected reactivation.</t>
+          <t>Leaving Temporary Under-18 Mode and restoring an adult rendering context MUST require an adult-authorized protected transition when the applicable policy requires it.  In simple terms, <strong>entering the safer state can be easy; leaving the safer state is protected.</strong></t>
+        </section>
+
+        <section anchor="case-study-handover-state-machine">
+          <name>Protected Handover State Transition</name>
+          <figure>
+            <artwork type="text">
+ADULT-REGISTERED DEVICE
+        |
+        | adult verifies once for a bounded viewing context
+        v
+PROTECTED ADULT VIEWING CONTEXT
+        |
+        | multiple permitted items may render while context is valid
+        | (no biometric prompt for every video or frame)
+        |
+        | parent is about to hand phone to child
+        v
+TEMPORARY UNDER-18 MODE ACTIVATED
+        |
+        +-- invalidate / suspend prior adult rendering authority
+        +-- advance protected policy / security state
+        +-- prohibit new adult-only Finality Authority
+        |
+        v
+PHONE OPERATES UNDER TEMPORARY MINOR RENDERING BASELINE
+        |
+        | child uses phone for permitted activities
+        |
+        | adult later takes phone back
+        v
+PROTECTED ADULT RE-AUTHORIZATION
+        |
+        +-- succeeds -&gt; new bounded Adult Viewing Context may be created
+        |
+        `-- absent / fails -&gt; adult-only content remains NON-RENDERABLE
+</artwork>
+          </figure>
+          <t>The state transition is deliberately asymmetric.  The architecture does not require the parent to prove adult identity repeatedly throughout every ordinary adult-content interaction.  Instead, it protects the moments that matter most: creation of the adult viewing context, transition into child handover mode, and protected restoration of adult rendering authority after the handover.</t>
+        </section>
+
+        <section anchor="case-study-father-hands-phone-to-child">
+          <name>Concrete Family Scenario: A Father Hands His Phone to a Minor Child</name>
+          <t>Consider an adult father using his own Adult-Registered Device.  Earlier, he established a valid Adult Viewing Context and used the phone normally.  His minor son or daughter repeatedly asks to use the phone.  The father knows that giving an unrestricted adult-configured device to a child is not the ideal security practice, but eventually agrees to the temporary handover.</t>
+          <t>Immediately before handing over the phone, the father activates Temporary Under-18 Mode.  The protected device state changes before physical possession changes.  Any adult-only Rendering Finality Authority that is incompatible with the new state is invalidated or made unusable, and no new adult-only authority can issue while the mode remains active.</t>
+          <t>The child can then use applications and content permitted by the applicable child policy.  If an adult-classified video arrives through a browser, social application, message, cache, AI-generated output, local file, cast request, mirror path, or another protected route, the content may exist as data but remains non-renderable because the current protected device state does not permit adult Rendering Finality Authority.</t>
+          <t>When the father receives the phone back, he does not merely toggle an unprotected Boolean to regain adult content.  The device requires the protected adult transition defined by policy.  After successful verification, a new bounded Adult Viewing Context may be established and new Rendering Finality Authority may be issued for subsequent adult use.</t>
+          <t>The design therefore converts a common emotional family moment into an explicit security transition: <strong>before the phone changes hands, its protected rendering authority changes state.</strong></t>
+        </section>
+
+        <section anchor="case-study-usability-defense">
+          <name>Why This Is Preferable to Requiring Verification for Every Video</name>
+          <t>A child-safety system that asks an adult to provide a fingerprint, face verification, PIN, or equivalent proof before every video would impose substantial usability cost.  It could interrupt continuous viewing, create unnecessary biometric interactions, increase authentication fatigue, and encourage users to disable the safety feature entirely.</t>
+          <t>This architecture therefore separates <strong>adult session establishment</strong> from <strong>child handover protection</strong>.  For the adult's own continuous use, the system MAY rely on a bounded Adult Viewing Context or Finality Lease that permits multiple items or many frames within a defined scope.  When the adult expects the device to leave his or her control, Temporary Under-18 Mode provides a deliberate handover boundary.</t>
+          <t>The resulting usability model is:</t>
+          <ul>
+            <li><t><strong>adult using own phone:</strong> verify at a meaningful protected transition, then use a bounded adult session rather than authenticating every video;</t></li>
+            <li><t><strong>adult about to hand phone to a child:</strong> activate Temporary Under-18 Mode before handover;</t></li>
+            <li><t><strong>child using the handed-over phone:</strong> adult-only Rendering Finality Authority remains unavailable under the temporary minor baseline; and</t></li>
+            <li><t><strong>adult takes phone back:</strong> protected adult re-authorization restores eligibility for a new bounded adult viewing context.</t></li>
+          </ul>
+          <t>This approach aims to preserve both safety and ordinary device usability.  It does not attempt to solve human behavior by creating constant friction.  It places stronger verification around security-state changes and uses execution-finality to make the selected state load-bearing at the rendering boundary.</t>
+        </section>
+
+        <section anchor="case-study-personal-design-motivation">
+          <name>Personal Design Motivation</name>
+          <t>The author is a father of three children.  The handover scenario described above is not presented only as an abstract security thought experiment.  It reflects an ordinary family problem the author has personally encountered: a child asks repeatedly to use a parent's phone, and a parent who cares about the child may eventually hand over the device even while knowing that unrestricted access is not the ideal technical state.</t>
+          <t>Human affection, trust, convenience, fatigue, and everyday family decisions cannot be eliminated by protocol design.  A useful child-safety architecture should therefore support parents at the point where those real decisions occur.  The proposed Temporary Under-18 Mode is intended as a practical answer to that problem: before handing over an adult phone, the parent can place the device into a temporary protected child state, and the rendering-finality layer makes that state consequential across the protected output path.</t>
+          <t>This personal motivation does not change the normative technical requirements of the architecture.  It explains why the shared-device case is treated as a first-class design requirement rather than as user error.  The broader objective is to turn a problem experienced in one family into a reusable technical protection that other families, platforms, and device ecosystems may choose to implement.</t>
+        </section>
+      </section>
+
+      <section anchor="case-study-device-age-registration">
+        <name>Device Registration and Age-Class Baseline</name>
+        <t>This case study distinguishes a device registered or provisioned for a minor from a device registered or provisioned for an adult.  A device MAY obtain its protected age-class baseline from a verified date of birth, a privacy-preserving age credential derived from that date of birth, a family or platform enrollment record, or another trusted age-assurance process accepted by policy.</t>
+        <t>If the verified registration state establishes that the registered user is below the applicable adult threshold, the device is a <strong>Minor-Registered Device</strong> under this profile.  A Minor-Registered Device MUST NOT issue Rendering Finality Authority for content classified as adult-only or otherwise prohibited to that age class.  Adult content therefore remains non-renderable on that device even if an adult account is later logged in, an application possesses an adult service credential, or adult content bytes are downloaded or cached.</t>
+        <t>The Minor-Registered Device rule is a device-policy floor, not a claim that the operating system continuously identifies the person holding the phone.  Ordinary application login, account switching, possession of an OVER_18 service credential, or a previous adult session MUST NOT silently override the protected minor registration state.  If policy permits the device itself to change from minor-registered to adult-registered status, that change MUST occur through an explicit authorized re-provisioning or age-registration procedure rather than through ordinary content access.</t>
+        <t>If the verified registration state establishes an adult user, the device is an <strong>Adult-Registered Device</strong>.  Adult registration makes the device eligible to request adult-content authority, but it MUST NOT itself authorize adult rendering.  When adult or other age-restricted content is about to become perceptible, the protected device environment MUST require fresh or sufficiently recent verification of the adult-authorized user as required by the applicable assurance profile.  Only after that verification succeeds may the PED issue a bounded Rendering Finality Authority for the protected session.</t>
+        <figure>
+          <artwork type="text">
+Verified device age registration
+          |
+          +-- registered user is MINOR
+          |        |
+          |        v
+          |   MINOR-REGISTERED DEVICE
+          |        |
+          |        `-- Adult-only Rendering Finality Authority MUST NOT issue
+          |             -&gt; ADULT CONTENT REMAINS NON-RENDERABLE
+          |
+          `-- registered user is ADULT
+                   |
+                   v
+              ADULT-REGISTERED DEVICE
+                   |
+                   | adult content requested
+                   v
+              Fresh / current adult verification required
+                   |
+             +-----+-----+
+             |           |
+          succeeds     fails
+             |           |
+             v           v
+        Bounded Finality  NO AUTHORITY
+        Authority may     -&gt; NON-RENDERABLE
+        issue
+</artwork>
+        </figure>
+        <t>The resulting rule is asymmetric: <strong>minor registration can be a protected hard-deny baseline for adult content, while adult registration is only permission to attempt adult verification, not permission to render.</strong></t>
+      </section>
+
+      <section anchor="case-study-threat-scenario">
+        <name>Threat Scenario</name>
+        <t>Consider a phone owned by an adult parent.  The parent has a valid privacy-preserving OVER_18 credential and legitimately opens age-restricted content.  Later, the parent locks the phone, closes the application, leaves the device unattended, changes applications, or hands the device to an underage child.  The child then attempts to start, resume, cast, mirror, or otherwise render the same or different restricted content.</t>
+        <t>The following facts MUST NOT, by themselves, authorize rendering for the child:</t>
+        <ul>
+          <li><t>the phone is registered to or normally used by an adult;</t></li>
+          <li><t>an adult account remains logged in;</t></li>
+          <li><t>an OVER_18 credential was previously validated;</t></li>
+          <li><t>the device remains unlocked;</t></li>
+          <li><t>a content application retains cookies, access tokens, or cached state;</t></li>
+          <li><t>restricted content has already been downloaded, buffered, decrypted inside a protected path, or partially rendered; or</t></li>
+          <li><t>a previous Rendering Finality Authority was valid for an earlier adult viewing context.</t></li>
+        </ul>
+        <t>The protected rendering path therefore distinguishes ownership and eligibility from current authority to produce perceptible restricted content.</t>
+      </section>
+
+      <section anchor="case-study-three-way-separation">
+        <name>Required Five-Way Separation</name>
+        <t>A deployment addressing registered-device age state and shared adult/minor use SHOULD separate five states:</t>
+        <ol>
+          <li><t><strong>Device Age Registration:</strong> protected device policy records whether the device is minor-registered or adult-registered based on verified date of birth, an age-class credential, or an equivalent trusted enrollment result.  Minor registration can prohibit adult Rendering Finality Authority at the device level.</t></li>
+          <li><t><strong>Adult Eligibility:</strong> a trusted process establishes only that an authenticated subject satisfies the applicable age threshold, for example OVER_18.</t></li>
+          <li><t><strong>Current Adult Viewing Context:</strong> a protected local mechanism establishes that an eligible adult has recently and intentionally activated the restricted-content viewing context on the relevant device or profile.</t></li>
+          <li><t><strong>Temporary Under-18 Handover State:</strong> protected device policy records that an adult-owned device has deliberately entered a temporary minor baseline for family handover; incompatible adult rendering authority is invalidated or suspended while this state remains active.</t></li>
+          <li><t><strong>Rendering Finality Authority:</strong> a bounded, non-bearer authority permits the specified restricted-content effect through the specified Finality Sink while the required context remains valid.</t></li>
+        </ol>
+        <t>Device Age Registration, Adult Eligibility, Current Adult Viewing Context, Temporary Under-18 Handover State, and Rendering Finality Authority are distinct.  A minor-registered device does not progress to adult Rendering Finality Authority under the child-safety profile.  An adult-registered device may establish a bounded adult context without per-video authentication, but Temporary Under-18 Mode overrides that adult context for protected restricted-content rendering until an authorized adult transition restores adult eligibility.</t>
+        <figure>
+          <artwork type="text">
+Device age registration
+        |
+        +-- MINOR -&gt; Adult Finality Authority prohibited
+        |              -&gt; DO NOT RENDER adult content
+        |
+        `-- ADULT -&gt; adult eligibility may be evaluated
+                       |
+                       | necessary, but not sufficient
+                       v
+              Protected adult verification / viewing context
+                       |
+                       v
+              Restricted Content Candidate Act remains NON-RENDERABLE
+                       |
+                       v
+              Protected Enforcement Domain validation
+                       |
+                       v
+              Scoped, short-lived Rendering Finality Authority
+                       |
+                       v
+              Protected Rendering Finality Sink
+                       |
+                       +-- valid current context -&gt; RENDER
+                       |
+                       `-- absent / expired / changed context -&gt; DO NOT RENDER
+</artwork>
+        </figure>
+      </section>
+
+      <section anchor="case-study-adult-viewing-context">
+        <name>Protected Adult Viewing Context</name>
+        <t>A higher-assurance deployment MAY maintain a protected Adult Viewing Context as local protected state.  The protocol does not require one universal biometric or identity mechanism.  The context may be established by an implementation-specific user-presence mechanism such as a secure device PIN, passkey, local biometric confirmation, trusted wearable confirmation, or another protected user-verification mechanism accepted by policy.</t>
+        <t>The content provider need not receive the adult's civil identity, biometric template, or exact date of birth.  The locally protected result can be limited to the fact that the required adult-presence condition is current for the bounded viewing context.</t>
+        <t>The Adult Viewing Context MAY be bound to device identity, protected user or profile context, application identity, content class, active session, policy epoch, revocation epoch, intended rendering sink, freshness state, and an expiration or revalidation condition.  These bindings may be represented inside the Rendering Finality Authority or maintained as protected local state checked by the PED and Finality Sink.</t>
+        <t>An implementation MUST NOT infer current adult presence solely from possession of a previously issued OVER_18 credential or from the continued existence of an adult account session.</t>
+      </section>
+
+      <section anchor="case-study-normal-adult-flow">
+        <name>Normal Adult Rendering Flow</name>
+        <t>One possible adult flow on an Adult-Registered Device is:</t>
+        <ol>
+          <li><t>The adult requests restricted content.  The request becomes a Restricted Content Candidate Act and remains non-renderable.  Adult device registration alone does not authorize display.</t></li>
+          <li><t>The PED validates that the device is not subject to a protected minor-registration hard deny, then validates the applicable age-threshold evidence and other policy predicates.</t></li>
+          <li><t>Where the deployment requires current adult presence, the protected device environment requests a fresh or sufficiently recent adult-presence confirmation.</t></li>
+          <li><t>The protected environment establishes a bounded Adult Viewing Context.</t></li>
+          <li><t>The PED commits protected validation evidence and issues scoped Rendering Finality Authority bound to the applicable device, application, session, content or policy class, sink, epoch, freshness, and expiration state.</t></li>
+          <li><t>The Finality Sink independently verifies the authority immediately before releasing the protected rendering effect.</t></li>
+          <li><t>Restricted content becomes perceptible only while the required authority and protected context remain valid.</t></li>
+        </ol>
+        <t>This flow prevents the age-assurance result from directly turning into permanent display permission.</t>
+        <t>For usability, a deployment MAY authorize a bounded series of rendering operations inside the same protected Adult Viewing Context.  The adult need not re-authenticate for every video when device, session, sink, policy, freshness, and other required bindings remain valid.  Revalidation is associated with meaningful state changes, expiry, handover, or risk transitions rather than with every frame.</t>
+      </section>
+
+      <section anchor="case-study-minor-registered-phone-flow">
+        <name>Minor-Registered Phone: Adult Content Never Becomes Renderable</name>
+        <t>Consider a phone registered to a 15-year-old using a verified date of birth or an equivalent trusted age-class credential.  The protected device state identifies the phone as minor-registered for the applicable adult-content policy.</t>
+        <ol>
+          <li><t>An application, browser, message, AI service, cache, or streaming service obtains adult-classified content.</t></li>
+          <li><t>The content becomes a Restricted Content Candidate Act and remains non-renderable.</t></li>
+          <li><t>The PED evaluates the protected device registration state and determines that the device is minor-registered.</t></li>
+          <li><t>No adult Rendering Finality Authority is issued for the prohibited content class.</t></li>
+          <li><t>The Protected Rendering Finality Sink withholds the relevant protected effect, such as key release, decryption-to-usable-output, protected-surface admission, compositor display, audio output, casting, or mirroring.</t></li>
+          <li><t>The content remains non-renderable even if an adult account is logged into the application or the content bytes are already present on the device.</t></li>
+        </ol>
+        <t>Under this strict child-safety profile, ordinary adult authentication inside an application does not override the device-level minor registration.  The device must first be explicitly re-provisioned out of the minor-registered state through an authorized age-registration process, if such a transition is permitted at all.</t>
+      </section>
+
+      <section anchor="case-study-adult-registered-phone-flow">
+        <name>Adult-Registered Phone: Verification Before a Protected Adult Rendering Session</name>
+        <t>Consider a phone registered to an adult.  The device's adult registration does not create a permanent adult-content pass.  Before establishing or renewing a protected adult rendering session, the protected environment requests fresh or sufficiently recent verification of the adult-authorized user, for example through a protected PIN, passkey, biometric confirmation, or another policy-approved local verification mechanism.  The architecture does not require a new biometric interaction for every video or frame; a successful verification MAY establish a bounded Adult Viewing Context covering multiple permitted items while its protected conditions remain valid.</t>
+        <t>If verification succeeds, the PED may issue a short-lived, device-bound, session-bound, application-bound where applicable, content-or-policy-bound, sink-bound Rendering Finality Authority.  If verification fails, is cancelled, is stale, or cannot be established, no such authority issues and the adult content remains non-renderable.</t>
+        <t>This means the adult phone behaves differently from an unrestricted bearer credential: <strong>the device being registered to an adult is only the first eligibility condition; the adult must still verify before the protected adult rendering session begins.</strong></t>
+      </section>
+
+      <section anchor="case-study-why-registration-setting-alone-is-not-enough">
+        <name>Why Device Age Registration or an Adult-Verification Setting Alone Is Not Enough</name>
+        <t>A device-age registration rule is useful policy input, but the rule does not by itself establish the consequence-control property defined by this document.  An implementation can correctly record that a device belongs to a minor, or correctly require an adult verification step, while still allowing restricted content to become perceptible through a later path that does not consult or cannot be controlled by that setting.</t>
+        <t>This distinction is central to the case study.  The architecture does not propose replacing age registration, parental settings, or adult verification.  It makes those results technically load-bearing at the protected rendering boundary.</t>
+
+        <section anchor="case-study-without-execution-finality">
+          <name>Scenario A: Device-Age Setting Without Execution-Finality Rendering</name>
+          <t>Consider a phone registered to a 15-year-old.  The operating system or platform correctly stores a MINOR age-class setting and an application correctly blocks access to an adult catalogue.  This appears sufficient if the only path considered is the application's normal user interface.</t>
+          <t>However, the restricted material may later arrive or become usable through another path, for example:</t>
+          <ul>
+            <li><t>a browser or embedded web view that does not consume the same minor-device setting;</t></li>
+            <li><t>a messaging application, downloaded file, local cache, sideloaded application, or third-party SDK;</t></li>
+            <li><t>an AI system that generates or transforms restricted material after the original access check;</t></li>
+            <li><t>a previously authorized adult account or stale application session;</t></li>
+            <li><t>a decoder, GPU, compositor, protected surface, audio path, casting path, mirroring path, or external display path that is not bound to the upstream age decision; or</t></li>
+            <li><t>compromised or buggy ordinary application software that ignores the setting after content has already been delivered.</t></li>
+          </ul>
+          <t>In those cases, the age setting may still say MINOR and the upstream policy may still say DENY, yet pixels, audio, cast output, or another perceptible representation can be produced if the final materialization path has independent authority to proceed.  The failure is therefore not necessarily incorrect age registration.  The failure is that the age decision is not technically coupled to the final consequence.</t>
+          <figure>
+            <artwork type="text">
+MINOR device registration
+        |
+        v
+Upstream setting / parental policy = DENY
+        |
+        v
+Normal application path blocks content
+        |
+        +-------------------------------+
+        |                               |
+        | alternate / stale / local     | normal path
+        | rendering path                |
+        v                               v
+Decoder / GPU / cast / mirror /      BLOCKED
+AI-generated or cached content
+        |
+        v
+No protected finality check
+        |
+        v
+RESTRICTED CONTENT MAY STILL BECOME PERCEPTIBLE
+</artwork>
+          </figure>
+          <t>The same weakness exists on an adult-registered phone if the only protection is a one-time adult verification setting.  The father may verify once, the application may create an ordinary session, and the son may later inherit that still-valid application state.  If the final rendering path merely trusts the earlier login or account flag, the adult verification has become a transferable session property rather than current rendering authority.</t>
+        </section>
+
+        <section anchor="case-study-with-execution-finality">
+          <name>Scenario B: The Same Device Rules With Execution-Finality Rendering</name>
+          <t>Under this architecture, device-age registration and adult verification remain important, but they are inputs to the PED rather than the final enforcement mechanism.</t>
+          <t>For a Minor-Registered Device, the protected registration state causes the PED to deny adult-only Rendering Finality Authority.  The decisive difference is that the Protected Rendering Finality Sink also requires valid authority before enabling the protected materialization effect.  The result therefore remains load-bearing even if restricted bytes are downloaded, cached, generated locally, opened through another application, or presented to a protected decoder or compositor.</t>
+          <t>For an Adult-Registered Device, fresh or sufficiently recent adult verification may establish a bounded viewing context, but the verification result itself is not a permanent display credential.  The PED issues only scoped authority, and the Finality Sink independently verifies that authority before key release, decoding, protected-surface creation, display, audio, casting, mirroring, or another protected output effect.</t>
+          <figure>
+            <artwork type="text">
+Device registration / age assurance / adult verification
+        |
+        v
+POLICY INPUTS
+        |
+        v
+Restricted Content Candidate Act
+        |
+        v
+NON-RENDERABLE
+        |
+        v
+Protected Enforcement Domain validates current state
+        |
+        +-- MINOR-REGISTERED -&gt; no adult authority
+        |
+        `-- ADULT-REGISTERED + current adult verification
+                    |
+                    v
+          bounded Rendering Finality Authority
+                    |
+                    v
+          PROTECTED RENDERING FINALITY SINK
+                    |
+              +-----+-----+
+              |           |
+           valid        invalid / absent / stale
+              |           |
+              v           v
+           RENDER      KEEP NON-RENDERABLE
+</artwork>
+          </figure>
+          <t>Execution-Finality therefore does not compete with the device-age setting.  It supplies the enforcement boundary that makes the setting's decision difficult to bypass through a different application, content source, media stage, or output sink.</t>
+        </section>
+
+        <section anchor="case-study-why-finality-is-still-required">
+          <name>Why a Perfect Setting Would Already Be a Form of Finality Enforcement</name>
+          <t>If a vendor can truthfully guarantee that a MINOR setting is unforgeable, cannot be overridden by ordinary applications or accounts, is checked on every protected route by which restricted content can become perceptible, blocks key release or rendering when required, covers local files and AI-generated media, covers audio, casting, mirroring, XR and secondary displays, remains current across revocation and state changes, and fails closed when enforcement state is unavailable, then the vendor has implemented substantially more than an ordinary account or parental-control setting.</t>
+          <t>Such a design has effectively moved the policy result into the consequence path.  In the terminology of this document, it is implementing the essential security property of execution-finality: <strong>the protected external effect cannot occur unless current authority is verified at the boundary capable of causing that effect.</strong></t>
+          <t>The purpose of the protocol is therefore not to claim that a single software toggle can never be engineered securely.  The purpose is to define the interoperable security semantics required for that toggle, age credential, parental rule, or adult-verification result to remain authoritative all the way to perceptibility.</t>
+        </section>
+
+        <section anchor="case-study-comparison-summary">
+          <name>Comparison Summary</name>
+          <figure>
+            <artwork type="text">
+WITHOUT EXECUTION-FINALITY
+Age/device setting -&gt; policy decision -&gt; application tries to enforce
+                                      |
+                                      `-- later or alternate path may render
+
+WITH EXECUTION-FINALITY
+Age/device setting -&gt; PED decision -&gt; scoped authority -&gt; protected sink
+                                                        |
+                                                        `-- no valid authority,
+                                                            no protected rendering effect
+</artwork>
+          </figure>
+          <t>The difference is therefore not merely whether the system knows that a user or device is a minor.  The difference is whether that knowledge remains enforceable at the last trusted boundary before restricted content becomes perceptible.</t>
+        </section>
+      </section>
+
+      <section anchor="case-study-handoff-to-minor">
+        <name>Handoff to the Minor</name>
+        <t>When the device moves outside the protected adult viewing context, the implementation SHOULD invalidate, suspend, or require revalidation of the corresponding Rendering Finality Authority according to the applicable assurance profile.  Relevant state changes can include:</t>
+        <ul>
+          <li><t>device lock or unlock;</t></li>
+          <li><t>protected user or profile change;</t></li>
+          <li><t>application termination or material backgrounding;</t></li>
+          <li><t>session expiry or inactivity;</t></li>
+          <li><t>adult-presence freshness expiry;</t></li>
+          <li><t>content-class escalation;</t></li>
+          <li><t>change of rendering sink or output path;</t></li>
+          <li><t>start of casting, mirroring, remote display, or XR output;</t></li>
+          <li><t>security-epoch or device-attestation change;</t></li>
+          <li><t>revocation or policy-epoch change; or</t></li>
+          <li><t>another deployment-defined event indicating that the prior protected viewing context can no longer be relied upon.</t></li>
+        </ul>
+        <t>After such an event, the child's possession of the adult's phone does not restore the former adult authority.  The Candidate Act remains or returns to a Non-Renderable State unless the required current authorization predicates are established again.</t>
+        <figure>
+          <artwork type="text">
+Father verifies adult eligibility and presence
+        |
+        v
+Adult Viewing Context A
+        |
+        v
+Finality Lease A
+        |
+        v
+Restricted content may render
+        |
+        |  lock / timeout / profile change /
+        |  app transition / revalidation event
+        v
+Finality Lease A expires, suspends, or becomes stale
+        |
+        v
+Minor uses the same phone
+        |
+        v
+Old adult status is NOT sufficient authority
+        |
+        v
+Fresh required adult context unavailable
+        |
+        v
+Finality Sink -&gt; CONTENT REMAINS NON-RENDERABLE
+</artwork>
+        </figure>
+      </section>
+
+      <section anchor="case-study-immediate-handoff">
+        <name>Immediate Handoff While Content Is Already Playing</name>
+        <t>The hardest variant occurs when the adult successfully authenticates, starts restricted content, and immediately hands the still-unlocked and still-playing device to a child.  A one-time age check cannot by itself detect that physical change of viewer.</t>
+        <t>A deployment requiring stronger protection SHOULD therefore use bounded or event-driven revalidation rather than issuing an indefinitely valid adult session.  Revalidation MAY be triggered by lease expiry, inactivity, screen-off/screen-on transition, application transition, a new restricted title, content-class escalation, output-path change, a high-risk policy event, or another protected continuity signal.</t>
+        <t>For high-risk content, an implementation MAY pause, blank, mute, or otherwise return the protected output to a non-perceptible state before requesting revalidation.  Rendering resumes only if the required adult-authorized context is re-established and new or renewed Finality Authority is successfully verified.</t>
+        <t>A deployment MAY also use privacy-preserving local continuity mechanisms, but this document does not require continuous camera monitoring, continuous facial recognition, or continuous transmission of biometric information.  The protocol requirement concerns the validity of current authority, not continuous identification of a human viewer.</t>
+      </section>
+
+      <section anchor="case-study-state-machine">
+        <name>Illustrative State Machine</name>
+        <figure>
+          <artwork type="text">
+RESTRICTED CONTENT CANDIDATE ACT
+     |
+     v
+NON-RENDERABLE
+     |
+     | check protected device age-registration state
+     |
+     +-- MINOR-REGISTERED
+     |      |
+     |      `-- Adult Finality Authority prohibited
+     |           -&gt; REMAIN NON-RENDERABLE
+     |
+     `-- ADULT-REGISTERED
+            |
+            | adult verification required
+            v
+       ADULT VERIFIED / BOUNDED VIEWING CONTEXT
+            |
+            | PED validation + protected evidence
+            v
+       FINALITY AUTHORITY ACTIVE
+            |
+            | sink verifies current bindings
+            v
+       RESTRICTED CONTENT PERCEPTIBLE
+            |
+            | expiry / lock / profile change / revocation /
+            | context loss / required revalidation failure
+            v
+       NON-RENDERABLE
+</artwork>
+        </figure>
+        <t>The important property is that the state transition back to NON-RENDERABLE does not depend on deleting the content bytes.  Delivery, caching, buffering, or protected decoding may already have occurred.  The security consequence is enforced by withholding or terminating the protected ability to make the content perceptible.</t>
+      </section>
+
+      <section anchor="case-study-example-minor-device-denial">
+        <name>Illustrative Minor-Registered Device Denial</name>
+        <t>The following non-normative example illustrates the intended device-policy semantics.  It does not add fields to the normative JSON schemas defined earlier in this document.</t>
+        <figure>
+          <artwork type="json">
+{
+  "candidate_act_id": "rca-minor-device-552",
+  "device_registration_age_class": "MINOR",
+  "content_class": "ADULT_SEXUAL_CONTENT",
+  "decision": "DENY_RENDER",
+  "permitted_effects": [],
+  "protected_sink_action": "KEEP_NON_RENDERABLE",
+  "reason": "MINOR_REGISTERED_DEVICE_PROHIBITS_ADULT_RENDERING_AUTHORITY"
+}
+</artwork>
+        </figure>
+      </section>
+
+      <section anchor="case-study-example-policy-result">
+        <name>Illustrative Policy Result After Handoff</name>
+        <t>The following non-normative example shows the logical result when a previously valid adult session is no longer sufficiently current for protected rendering.  It illustrates policy semantics and does not add fields to the JSON schemas defined earlier in this document.</t>
+        <figure>
+          <artwork type="json">
+{
+  "candidate_act_id": "rca-shared-device-441",
+  "previous_adult_eligibility": "OVER_18",
+  "current_adult_viewing_context": "REVALIDATION_REQUIRED",
+  "decision": "REQUIRE_REVALIDATION",
+  "permitted_effects": [],
+  "protected_sink_action": "SUSPEND_RESTRICTED_RENDERING",
+  "reason": "PRIOR_ADULT_STATUS_IS_NOT_CURRENT_RENDERING_AUTHORITY"
+}
+</artwork>
+        </figure>
+        <t>If the required revalidation succeeds, a deployment may create new or renewed bounded authority.  If it does not succeed, the protected rendering effects remain disabled.</t>
+      </section>
+
+      <section anchor="case-study-limitations">
+        <name>Security Claim and Limitation</name>
+        <t>This architecture does not claim that a device can always determine which physical person is looking at a screen.  If an adult authenticates and immediately hands an already-playing device to a child during an otherwise valid lease, and the implementation has no event or protected signal capable of causing revalidation, the device cannot reliably infer the physical handoff.</t>
+        <t>The defensible security claim is narrower and technically important: a successful adult age check, an adult-owned device, an adult account, or a previous adult session MUST NOT automatically become permanent or freely transferable restricted-rendering authority for every later user of that device.</t>
+        <t>Risk can be reduced through short-lived authority, protected session binding, explicit profile separation, revalidation on meaningful state transitions, higher-assurance local user-presence checks, sink-bound authority, and fail-closed behavior when required current authority cannot be established.</t>
+      </section>
+
+      <section anchor="case-study-core-rules">
+        <name>Core Rules Derived from the Case Study</name>
+        <ul>
+          <li><t>A device registered or provisioned as belonging to a minor, based on verified date of birth or equivalent trusted age-class evidence, MUST NOT issue adult-only Rendering Finality Authority under the strict child-safety profile.</t></li>
+          <li><t>Ordinary adult account login or possession of an adult service credential MUST NOT override a protected minor-device registration state.</t></li>
+          <li><t>An adult-registered device MUST still require fresh or sufficiently recent adult verification before adult-content Rendering Finality Authority may issue.</t></li>
+          <li><t>Adult device ownership MUST NOT be treated as adult rendering authority.</t></li>
+          <li><t>An adult account login MUST NOT be treated as indefinite restricted-content authority.</t></li>
+          <li><t>An age credential establishes eligibility; it MUST NOT by itself establish indefinite current-viewer authority.</t></li>
+          <li><t>A child profile MUST NOT inherit a previously issued adult Rendering Finality Authority.</t></li>
+          <li><t>A materially changed device, session, profile, application, output, policy, revocation, or protected-presence state SHOULD trigger expiry, suspension, or revalidation as required by the applicable assurance profile.</t></li>
+          <li><t>Where current adult authorization cannot be established, the Protected Rendering Finality Sink MUST keep the restricted effect non-renderable.</t></li>
+          <li><t>A device-age or parental-control setting that is enforced only at an upstream application or account boundary MUST NOT be treated as equivalent to protected rendering finality when alternate materialization paths remain available.</t></li>
+          <li><t>If a deployment claims that its age-setting mechanism is itself sufficient final enforcement, every protected materialization path within that claim MUST enforce the current setting or authority before the restricted effect becomes perceptible and MUST fail closed when that enforcement state cannot be established.</t></li>
+        </ul>
+        <t>The resulting design principle is: protected device age registration establishes the baseline policy; minor registration can make adult content categorically non-renderable; adult registration permits an adult-verification attempt but does not itself authorize display; protected presence or control establishes a bounded viewing context; and Rendering Finality Authority controls whether restricted content may become perceptible.</t>
+      </section>
+    </section>
+
+    <section anchor="frequently-asked-questions">
+      <name>Frequently Asked Questions</name>
+      <section anchor="faq-age-assurance-without-surveillance">
+        <name>FAQ 1 — How can Execution-Finality protect children without creating continuous surveillance?</name>
+        <t>The biggest challenge is determining whether the person receiving content is a child or an adult. A naive hardware-rendering gate could require continuous camera access, facial analysis, or age estimation. That would create serious privacy, security, and regulatory concerns.</t>
+        <t>Execution-Finality should avoid continuous biometric surveillance altogether. Instead, the architecture separates age assurance from execution enforcement.</t>
+        <t>A trusted age-assurance provider can establish only the minimum fact required, for example that the user belongs to an Under-18 or 18+ age class. A privacy-preserving credential, potentially using zero-knowledge techniques, can prove that condition without exposing the user’s name, date of birth, face, or other unnecessary personal information.</t>
+        <figure>
+          <artwork type="text">
+Age Assurance
+      |
+      v
+Privacy-Preserving Credential
+      |
+      v
+Policy Decision
+      |
+      v
+Finality Lease
+      |
+      v
+Protected Rendering Sink
+</artwork>
+        </figure>
+        <t>The hardware does not need to know who the person is. It only needs to determine whether the current rendering operation possesses valid authority under the applicable policy.</t>
+        <t>A short-lived Finality Lease can be issued for a particular device, session, policy, and rendering destination. The lease can be cryptographically bound to:</t>
+        <ul>
+          <li>
+            <t>age category or eligibility class</t>
+          </li>
+          <li>
+            <t>device public key</t>
+          </li>
+          <li>
+            <t>content or policy classification</t>
+          </li>
+          <li>
+            <t>authorized rendering sink</t>
+          </li>
+          <li>
+            <t>policy version</t>
+          </li>
+          <li>
+            <t>expiration time</t>
+          </li>
+          <li>
+            <t>nonce</t>
+          </li>
+          <li>
+            <t>revocation information</t>
+          </li>
+          <li>
+            <t>the protected session</t>
+          </li>
+        </ul>
+        <t>This avoids creating a permanent adult token. Authorization can instead be temporary, scoped, revocable, and bound to an authenticated device or session.</t>
+        <t>For a family device, the system can use explicit authorization transitions. An adult can authenticate and establish an authorized session; when the device is locked, handed over, or the authorization expires, the protected session terminates. A child subsequently using the device receives the applicable child policy.</t>
+        <t>Most importantly, age determination occurs upstream while finality enforcement occurs downstream. The Finality Sink should not ask whether the person is 17 or 18. It should ask whether this rendering operation is currently authorized under the applicable policy.</t>
+        <t>Design principle: age should be an authorization attribute, not a continuously monitored biometric state.</t>
+      </section>
+      <section anchor="faq-vendor-hardware-redesign">
+        <name>FAQ 2 — Does this require Apple, Google, Microsoft, NVIDIA, AMD, Qualcomm, or other vendors to redesign their hardware?</name>
+        <t>No. That would be an unnecessarily difficult deployment model. Execution-Finality should not prescribe a particular GPU, operating system, processor, secure element, display controller, age-assurance provider, or content-classification implementation. The standards layer should define the protocol and security semantics of the finality boundary.</t>
+        <t>Different platforms can implement that boundary differently. Apple could use secure hardware and a protected media pipeline; Android manufacturers could use trusted execution and their display stack; Windows could integrate with protected media and graphics infrastructure; smart TVs could use secure media pipelines; cloud-gaming platforms could enforce the boundary in protected streaming and rendering components.</t>
+        <figure>
+          <artwork type="text">
+Content / Application
+        |
+        v
+    Policy Engine
+        |
+        v
+  Finality Authority
+        |
+        v
+ OS Enforcement Point
+        |
+        v
+Protected Media / GPU Path
+        |
+        v
+    Finality Sink
+</artwork>
+        </figure>
+        <t>The standards layer can define what constitutes valid execution authority and how that authority must be verified, including authorization evidence, cryptographic binding, content identity, policy identifiers, device or sink identity, freshness, expiry, revocation, replay protection, scope, and failure behavior. The physical implementation remains platform-specific.</t>
+        <t>The adoption proposition is therefore not “build a completely new child-safety processor.” It is “provide a trustworthy enforcement boundary capable of validating standardized finality authority.”</t>
+        <t>A staged deployment path can be:</t>
+        <ul>
+          <li>
+            <t>Stage 1 — Software enforcement: browsers, applications, and operating systems implement the protocol.</t>
+          </li>
+          <li>
+            <t>Stage 2 — Trusted execution: authorization mechanisms move into secure OS or TEE components.</t>
+          </li>
+          <li>
+            <t>Stage 3 — Protected media paths: high-risk content is prevented from bypassing the trusted execution path.</t>
+          </li>
+          <li>
+            <t>Stage 4 — Hardware finality: new devices can place the final enforcement point inside protected media, GPU, compositor, display, audio, or XR pipelines.</t>
+          </li>
+          <li>
+            <t>Stage 5 — Ecosystem adoption: content providers, AI providers, browsers, app stores, and platforms use the standardized interface.</t>
+          </li>
+        </ul>
+        <t>The architecture is therefore hardware-rooted where hardware support exists, but protocol-defined and implementation-neutral at the standards layer. The interface is standardized; the implementation is not.</t>
+      </section>
+      <section anchor="faq-performance-and-battery">
+        <name>FAQ 3 — Won’t cryptographic enforcement make video, gaming, and AI rendering slow or battery-intensive?</name>
+        <t>It would if every frame had to undergo a complete cryptographic authorization check. That should not be the design.</t>
+        <t>At 120 Hz, a display can process 120 frames every second. Performing an expensive authorization operation on every frame would be inefficient. Execution-Finality should therefore use authorization epochs or Finality Leases.</t>
+        <figure>
+          <artwork type="text">
+Authenticate
+    |
+    v
+Verify Policy
+    |
+    v
+Issue Finality Lease
+    |
+    v
+Protected Session
+    |
+    v
+Render Thousands of Frames
+</artwork>
+        </figure>
+        <t>For example, a 10-minute lease could authorize a particular protected session. Individual frames would not each need a new authorization transaction. The lease can be cryptographically bound to Device + Session + Content/Policy + Rendering Sink + Expiry + Nonce.</t>
+        <t>Another finality check occurs when a meaningful security state changes, such as authorization expiry, device change, rendering-sink change, content-classification change, policy change, revocation, protected-session transfer, or a new high-risk content category.</t>
+        <t>For a 30-minute cloud-gaming session at 120 Hz, the architecture does not perform 120 cryptographic authorization checks every second. A session can be authorized once for a bounded epoch and then render more than 200,000 frames under that protected session, subject to the lease and revalidation rules.</t>
+        <t>The same principle applies to AI-generated content. An AI model can generate large numbers of candidate outputs without individually invoking the finality protocol. The protected effect boundary is the critical point.</t>
+        <t>Architectural distinction: generation can be high-volume and computationally cheap; effectuation must be authoritative and policy-compliant.</t>
+        <t>Performance principle: cryptographically protect authorization state transitions, not individual frames.</t>
+      </section>
+      <section anchor="faq-age-credential-issuers">
+        <name>FAQ 4 — Who issues and validates age credentials?</name>
+        <t>This should not be controlled by a single global authority. The architecture should support a federated age-assurance model.</t>
+        <t>Possible credential issuers can include regulated age-assurance providers, identity providers, government-approved providers, platform-operated age-assurance services, and other trusted authorities accepted by the relying party.</t>
+        <t>The important separation is: credential issuer is not necessarily the policy authority, and neither is necessarily the rendering authority.</t>
+        <figure>
+          <artwork type="text">
+Age Provider
+    |
+    |  “User satisfies 18+ condition”
+    v
+Age Credential
+    |
+    v
+Policy Authority
+    |
+    |  “18+ may access this content”
+    v
+Finality Authority
+    |
+    |  scoped authorization
+    v
+Finality Sink
+</artwork>
+        </figure>
+        <t>The Finality Sink validates only the authorization evidence and bindings required for the protected effect. A credential or signature by itself is not execution authority. The executor must correlate the evidence with the exact action or effect and make the applicable authorization decision.</t>
+        <t>A stronger privacy design uses attribute-based credentials rather than identity-heavy credentials. Instead of disclosing a person’s identity and exact date of birth, the credential can establish only that the authenticated subject satisfies the applicable age threshold.</t>
+      </section>
+      <section anchor="faq-vpn-proxy-bypass">
+        <name>FAQ 5 — Can VPNs, proxies, or alternative rendering paths bypass it?</name>
+        <t>A network-level mechanism can be bypassed. A protected effect boundary is designed to address that weakness. A VPN can hide a network destination; a proxy can alter the request path; alternative DNS can bypass DNS filtering; and an AI model can transform content. None of those should automatically grant authority to cross the protected effect boundary.</t>
+        <figure>
+          <artwork type="text">
+Untrusted Internet
+       |
+VPN / Proxy / AI / Browser
+       |
+       v
+Candidate Content
+       |
+       v
+Policy Evaluation
+       |
+       v
+Finality Authority
+       |
+       v
+Finality Sink
+       |
+       v
+Pixels
+</artwork>
+        </figure>
+        <t>The important requirement is alternate-path closure. If an application can simply bypass the protected rendering path and directly access an unprotected display or output path, the architecture is incomplete.</t>
+        <t>Every consequential rendering path that the deployment claims to protect should converge on an authenticated enforcement boundary. Depending on platform design, this may include the display compositor, protected media decoder, GPU pipeline, XR compositor, cloud-streaming client, secure display controller, audio path, cast path, or mirror path.</t>
+        <t>The architecture does not claim to prevent physical capture. A person can photograph a screen with another camera. Execution-Finality protects the digital effect boundary, not physical reality.</t>
+      </section>
+      <section anchor="faq-ai-transformed-content">
+        <name>FAQ 6 — What happens when AI transforms restricted content?</name>
+        <t>This is a critical issue because a restriction tied only to an original URL or file identifier can disappear when an AI system creates a modified representation.</t>
+        <figure>
+          <artwork type="text">
+Restricted Image
+      |
+      v
+AI Transformation
+      |
+      v
+New Representation
+      |
+      v
+Policy Re-evaluation / Authority Check
+      |
+      v
+Finality Sink
+</artwork>
+        </figure>
+        <t>The authorization should be associated not merely with a URL, but with the material content or effect being authorized. Conceptually, the finality decision can bind the original content digest, relevant transformation lineage, final content digest, policy, age or eligibility class, and destination sink.</t>
+        <t>The system does not necessarily need to understand every transformation semantically. Low-risk transformations such as resizing may preserve an existing authorization where policy permits, while higher-risk generative modification can require a new policy evaluation and new authority.</t>
+        <t>Key rule: transformation does not automatically create new authority. An AI model can generate something new, but generation itself does not make that output authorized. Computation is not authority.</t>
+      </section>
+      <section anchor="faq-lease-theft-replay">
+        <name>FAQ 7 — How are Finality Leases protected against theft and replay?</name>
+        <t>A Finality Lease should not be a simple bearer token. It should be cryptographically bound to the conditions under which it was issued.</t>
+        <t>A lease can include or bind:</t>
+        <ul>
+          <li>
+            <t>lease identifier</t>
+          </li>
+          <li>
+            <t>device public key</t>
+          </li>
+          <li>
+            <t>session identifier</t>
+          </li>
+          <li>
+            <t>content or policy digest</t>
+          </li>
+          <li>
+            <t>authorized sink identifier</t>
+          </li>
+          <li>
+            <t>policy epoch</t>
+          </li>
+          <li>
+            <t>revocation epoch</t>
+          </li>
+          <li>
+            <t>expiration</t>
+          </li>
+          <li>
+            <t>nonce</t>
+          </li>
+          <li>
+            <t>permitted effect scope</t>
+          </li>
+        </ul>
+        <t>The sink verifies the required bindings. Stealing the lease therefore does not automatically allow an attacker to use it on another device, sink, session, content item, policy epoch, or output path.</t>
+        <t>Replay resistance can use unique nonces, expiration, session binding, device-key binding, sink binding, policy epochs, atomic consumption where appropriate, and revocation or status checks. Particularly sensitive operations can use single-use authority.</t>
+        <t>A crucial distinction is that freshness is not the same as authorization. A fresh lease can still be revoked or outside the permitted policy. A valid signature proves integrity or control of a key; it does not by itself prove that the protected effect is authorized.</t>
+      </section>
+      <section anchor="faq-compromised-os-application">
+        <name>FAQ 8 — What happens if the operating system or application is compromised?</name>
+        <t>The answer depends on the assurance profile. If everything is controlled only by ordinary software and the operating system is malicious, an attacker may bypass a software-only enforcement mechanism.</t>
+        <t>For higher-assurance child-safety enforcement, the protected path can be structured as:</t>
+        <figure>
+          <artwork type="text">
+Application
+    |
+    v
+Operating System
+    |
+    v
+Trusted Execution / Protected Service
+    |
+    v
+Protected Rendering Path
+    |
+    v
+Hardware-Rooted Finality Sink
+</artwork>
+        </figure>
+        <t>The application can be compromised without automatically gaining finality authority. Stronger protection can use secure boot, hardware-backed keys, trusted execution environments, authenticated OS components, protected media paths, authenticated display or compositor paths, and hardware-enforced access controls.</t>
+        <t>No architecture should claim complete protection if an attacker has unrestricted control of the hardware. The standard can therefore define assurance profiles such as Software Finality, OS/TEE Finality, and Hardware Rendering Finality, allowing progressive deployment with explicit security expectations.</t>
+      </section>
+      <section anchor="faq-policy-authority">
+        <name>FAQ 9 — Who controls the content policy?</name>
+        <t>The Execution-Finality protocol should not decide what is child-safe. That is a critical separation. The architecture separates policy creation, policy evaluation, and finality enforcement.</t>
+        <figure>
+          <artwork type="text">
+Policy Authority
+      |
+      v
+Policy Identifier / Version
+      |
+      v
+Policy Decision
+      |
+      v
+Finality Authority
+      |
+      v
+Finality Sink
+</artwork>
+        </figure>
+        <t>Different jurisdictions and organizations may legitimately apply different policies. A national regulator, a school, a parent, a platform, or another competent authority may define or select policy under its own legal and operational context.</t>
+        <t>The protocol therefore carries or binds a policy identifier and policy version rather than embedding one universal definition of harmful or child-safe content. The Finality Sink enforces whether the specific operation was authorized under the applicable policy; it does not decide what society should consider appropriate.</t>
+      </section>
+      <section anchor="faq-censorship-abuse">
+        <name>FAQ 10 — Can governments or platforms abuse the mechanism for censorship?</name>
+        <t>Yes. This is a legitimate architectural risk and should be addressed explicitly. A mechanism capable of preventing one category of content from reaching children could theoretically be expanded to restrict other content or adult users.</t>
+        <t>Anti-abuse safeguards should include:</t>
+        <ul>
+          <li>
+            <t>Scope limitation: authority explicitly binds purpose, content class, age or eligibility class, jurisdiction, policy version, expiration, and authorized sink.</t>
+          </li>
+          <li>
+            <t>Policy transparency: policies have identifiable versions, issuers, scopes, and auditable changes.</t>
+          </li>
+          <li>
+            <t>Separation of powers: age-credential issuance, policy definition, finality-authority issuance, and hardware control should not automatically belong to one entity.</t>
+          </li>
+          <li>
+            <t>Privacy minimization: the Finality Sink should learn only what is necessary to decide authorization, rather than collecting detailed viewing histories or civil identity.</t>
+          </li>
+          <li>
+            <t>Adult-rights separation: a child-safety profile should not automatically become a general adult content-control profile.</t>
+          </li>
+        </ul>
+        <t>These safeguards are important for interoperability, legitimacy, and standards acceptance because the enforcement mechanism should be technically narrow even when policy sources differ.</t>
+      </section>
+      <section anchor="faq-offline-outage">
+        <name>FAQ 11 — How does it work offline or during authorization-service outages?</name>
+        <t>The system should not require an online cryptographic transaction for every frame or every media object. Short-lived Finality Leases allow bounded offline operation after an authorization decision has been made.</t>
+        <figure>
+          <artwork type="text">
+Online Authorization
+       |
+       v
+Policy Evaluation
+       |
+       v
+Finality Lease
+       |
+       v
+Bounded Offline Operation
+       |
+       v
+Lease Expiry
+       |
+       v
+Renewal / Revalidation
+</artwork>
+        </figure>
+        <t>Failure behavior should be risk-based and policy-defined. High-risk content can fail closed when current authorization cannot be established. Already-authorized lower-risk sessions may continue only until the bounded lease expires, depending on policy.</t>
+        <t>Lease duration can vary by risk. Lower-risk operations may receive longer leases; higher-risk operations may receive short leases or require online authorization. The exact durations should be policy-defined rather than hard-coded into the protocol.</t>
+        <t>This prevents a cached authorization from becoming a permanent bypass while avoiding an online transaction for every rendered frame.</t>
+      </section>
+      <section anchor="faq-central-architecture">
+        <name>Central Architecture and Five Core Rules</name>
+        <t>Taken together, the FAQ answers produce the following child-safety architecture:</t>
+        <figure>
+          <artwork type="text">
+AGE ASSURANCE
+     |
+     v
+Privacy-Preserving Proof
+     |
+     v
+POLICY AUTHORITY
+     |
+     v
+Policy Decision
+     |
+     v
+FINALITY AUTHORITY
+     |
+     v
+Short-Lived, Scoped Lease
+     |
+     +-- Device Binding
+     +-- Session Binding
+     +-- Policy Binding
+     +-- Sink Binding
+     +-- Expiry / Nonce / Revocation
+     |
+     v
++---------------------------+
+| Protected OS / TEE        |
+| Enforcement Boundary      |
++-------------+-------------+
+              |
+              v
+       Protected Path
+              |
+              v
++---------------------------+
+| FINALITY SINK             |
+| GPU / Decoder /           |
+| Compositor / Display / XR |
++-------------+-------------+
+              |
+              v
+            PIXELS
+</artwork>
+        </figure>
+        <t>The five core rules are:</t>
+        <ul>
+          <li>
+            <t>No continuous biometric surveillance.</t>
+          </li>
+          <li>
+            <t>No age credential is itself execution authority.</t>
+          </li>
+          <li>
+            <t>No valid finality authority means no protected effect.</t>
+          </li>
+          <li>
+            <t>No alternate path may bypass the protected effect boundary.</t>
+          </li>
+          <li>
+            <t>Cryptographic verification protects authorization transitions, not every frame.</t>
+          </li>
+        </ul>
+      </section>
+    </section>
+    <section anchor="iana-considerations">
+      <name>IANA Considerations</name>
+      <t>This version requests no IANA actions.  If a future version standardizes an Internet media type, URI scheme, error registry, or globally interoperable consequence-class registry, the corresponding IANA considerations will be added.</t>
+    </section>
+    <section anchor="intellectual-property-considerations">
+      <name>Intellectual Property Considerations</name>
+      <t>Certain concepts described in this document are related to pending patent applications in the DAS Protocols family.  Any disclosure required by an applicable standards-development process should be made separately in accordance with that process.  This section is informational and does not specify licensing terms.</t>
+    </section>
+  </middle>
+  <back>
+    <references>
+      <name>Informative References</name>
+      <reference anchor="UNICEF-PORN" target="https://www.unicef.org/harmful-content-online">
+        <front>
+          <title>Protection of children from the harmful impacts of pornography</title>
+          <author>
+            <organization>UNICEF</organization>
+          </author>
+        </front>
+        <annotation>UNICEF states that pornographic content can harm children and that digital restrictions have not kept pace with technological shifts.</annotation>
+      </reference>
+      <reference anchor="ITU-COP" target="https://www.itu.int/en/ITU-D/Cybersecurity/Pages/COP/COP.aspx">
+        <front>
+          <title>Child Online Protection</title>
+          <author>
+            <organization>International Telecommunication Union</organization>
+          </author>
+        </front>
+        <annotation>ITU Child Online Protection programme and guidelines.</annotation>
+      </reference>
+      <reference anchor="UN-CRC-GC25" target="https://docstore.ohchr.org/SelfServices/FilesHandler.ashx?enc=3ik0d0T8SX%2FpP07DX0nLHD%2Baw%2BVH0KHJ3a1Msix3LkRIphZtOKg5ykXnYtA79MjKsj%2Fql4vDUtT77VibA3Lp4g%3D%3D">
+        <front>
+          <title>General Comment No. 25 (2021) on children's rights in relation to the digital environment</title>
+          <author>
+            <organization>United Nations Committee on the Rights of the Child</organization>
+          </author>
+        </front>
+        <annotation>United Nations guidance on children's rights in the digital environment.</annotation>
+      </reference>
+      <reference anchor="EU-MINORS" target="https://digital-strategy.ec.europa.eu/en/library/commission-publishes-guidelines-protection-minors">
+        <front>
+          <title>Guidelines on the protection of minors under the Digital Services Act</title>
+          <author>
+            <organization>European Commission</organization>
+          </author>
+        </front>
+        <annotation>European Commission protection-of-minors guidance.</annotation>
+      </reference>
+      <reference anchor="EU-AGE" target="https://digital-strategy.ec.europa.eu/en/policies/eu-age-verification">
+        <front>
+          <title>The EU approach to age verification</title>
+          <author>
+            <organization>European Commission</organization>
+          </author>
+        </front>
+        <annotation>Privacy-preserving age-verification approach for adult-restricted online content.</annotation>
+      </reference>
+    </references>
+  </back>
+</rfc>

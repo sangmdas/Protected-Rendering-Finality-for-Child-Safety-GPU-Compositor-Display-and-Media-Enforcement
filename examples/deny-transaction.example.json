@@ -1,0 +1,25 @@
+{
+  "candidate_act_id": "rca-minor-session-223",
+  "decision": "DENY_RENDER",
+  "decision_id": "decision-99831",
+  "validated_policy_epoch": 412,
+  "validated_revocation_epoch": 39,
+  "permitted_effects": [],
+  "denial_reasons": [
+    "RECIPIENT_NOT_ELIGIBLE",
+    "PARENTAL_POLICY_DENY"
+  ],
+  "validation_evidence_ref": "pve-deny:3882",
+  "decision_expires_at": "2026-08-26T17:36:00Z",
+  "sink_action": {
+    "release_content_key": false,
+    "decrypt": false,
+    "decode": false,
+    "create_protected_surface": false,
+    "display": false,
+    "play_audio": false,
+    "cast": false,
+    "mirror": false,
+    "result": "CONTENT_REMAINS_NON_RENDERABLE"
+  }
+}

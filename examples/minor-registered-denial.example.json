@@ -1,0 +1,9 @@
+{
+  "candidate_act_id": "rca-minor-device-552",
+  "device_registration_age_class": "MINOR",
+  "content_class": "ADULT_SEXUAL_CONTENT",
+  "decision": "DENY_RENDER",
+  "permitted_effects": [],
+  "protected_sink_action": "KEEP_NON_RENDERABLE",
+  "reason": "MINOR_REGISTERED_DEVICE_PROHIBITS_ADULT_RENDERING_AUTHORITY"
+}

@@ -1,0 +1,9 @@
+{
+  "candidate_act_id": "rca-shared-device-441",
+  "previous_adult_eligibility": "OVER_18",
+  "current_adult_viewing_context": "REVALIDATION_REQUIRED",
+  "decision": "REQUIRE_REVALIDATION",
+  "permitted_effects": [],
+  "protected_sink_action": "SUSPEND_RESTRICTED_RENDERING",
+  "reason": "PRIOR_ADULT_STATUS_IS_NOT_CURRENT_RENDERING_AUTHORITY"
+}

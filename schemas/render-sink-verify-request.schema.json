@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RenderSinkVerifyRequest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "candidate",
+    "authority",
+    "sink_runtime_state"
+  ],
+  "properties": {
+    "candidate": {
+      "$ref": "urn:ietf:params:json-schema:child-rendering-candidate:00"
+    },
+    "authority": {
+      "type": "object"
+    },
+    "sink_runtime_state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sink_id",
+        "current_policy_epoch",
+        "current_revocation_epoch",
+        "authority_consumed",
+        "device_attestation_state",
+        "output_path"
+      ],
+      "properties": {
+        "sink_id": {
+          "type": "string"
+        },
+        "current_policy_epoch": {
+          "type": "integer"
+        },
+        "current_revocation_epoch": {
+          "type": "integer"
+        },
+        "authority_consumed": {
+          "type": "boolean"
+        },
+        "device_attestation_state": {
+          "type": "string",
+          "enum": [
+            "VALID",
+            "INVALID",
+            "UNKNOWN"
+          ]
+        },
+        "output_path": {
+          "type": "string",
+          "enum": [
+            "DISPLAY",
+            "AUDIO",
+            "XR",
+            "CAST",
+            "MIRROR"
+          ]
+        },
+        "screen_capture_active": {
+          "type": "boolean"
+        },
+        "external_display_attached": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
