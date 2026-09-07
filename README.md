@@ -1865,3 +1865,88 @@ The central design principle remains:
 And the enforcement rule is:
 
 > **No valid finality authority means no protected rendering effect.**
+>
+> # License
+
+Copyright © 2026 Sangam Das. All rights reserved except as expressly licensed below.
+
+## Creative Commons License
+
+The documentation, diagrams, schemas, examples, explanatory material, and other copyrightable content in this repository are licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)**.
+
+Under this license, the material may be copied, shared, redistributed, adapted, studied, cited, indexed, and used for research or other non-commercial purposes, provided appropriate attribution is given.
+
+Commercial use is not authorized under this license.
+
+## Patent Rights Notice
+
+Certain concepts, architectures, methods, protocols, execution-finality mechanisms, protected rendering mechanisms, Candidate Act structures, Rendering Finality Authority mechanisms, Finality Sink mechanisms, protected device-state transitions, child-handover protections, and related technical subject matter described in this repository may be covered by pending patent applications in the **DAS Protocols patent family**.
+
+### Mothership Patent Application
+
+**Title:** THE DAS PROTOCOLS
+**PCT Application:** PCT/IB2026/055615
+**WIPO Publication:** WO 2026/150382
+**WIPO PATENTSCOPE:**
+https://patentscope.wipo.int/search/en/detail.jsf?docId=WO2026150382
+
+**Patent Pending. Patent Rights Reserved.**
+
+The CC BY-NC 4.0 license applies only to applicable copyright rights in the repository materials.
+
+It does **not** grant, imply, or convey any:
+
+* patent license;
+* covenant not to sue;
+* patent-right waiver;
+* commercial implementation right;
+* manufacturing right;
+* deployment right;
+* sublicensing right; or
+* other authorization under any patent or patent application.
+
+Publication of source material, schemas, examples, implementation references, pseudocode, test vectors, technical descriptions, or related materials in this repository does not by itself constitute a patent license.
+
+Any commercial implementation, manufacture, deployment, incorporation into products or services, or other activity that practices applicable patent claims must be separately authorized where required.
+
+## Non-Commercial Research and Evaluation
+
+Subject to CC BY-NC 4.0, the repository materials may be used for purposes such as:
+
+* academic study;
+* non-commercial research;
+* standards analysis;
+* interoperability study;
+* security review;
+* technical evaluation;
+* citation;
+* indexing;
+* educational use; and
+* non-commercial experimentation.
+
+Such copyright permission does not expand into a patent license.
+
+## Attribution
+
+Suggested attribution:
+
+**Sangam Das — Child-Safe Rendering Execution Finality: Hardware-Rooted Enforcement for Age-Restricted Content**
+
+Related patent family:
+
+**THE DAS PROTOCOLS — PCT/IB2026/055615 — WO 2026/150382**
+
+Copyright material:
+
+**CC BY-NC 4.0**
+
+Patent-related technical concepts:
+
+**Patent Pending — Patent Rights Reserved**
+
+## License Reference
+
+Creative Commons Attribution-NonCommercial 4.0 International:
+
+https://creativecommons.org/licenses/by-nc/4.0/
+
