@@ -2,7 +2,7 @@
 
 ## Hardware-Rooted Enforcement for Age-Restricted Content on Android, iOS, and Other Platforms
 
-**Vendor-neutral implementation reference for protected child-safety rendering across mobile, desktop, XR, media, and AI-enabled devices.**
+### Vendor-neutral implementation reference for protected child-safety rendering across mobile, desktop, XR, media, and AI-enabled devices.
 
 > **Core principle:** Permission to deliver content is not permission to render it.
 
